@@ -1,0 +1,12 @@
+# LaTeX
+_minted-*/
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.log
+*.out
+*.run.xml
+*.pdf
+*.synctex.gz
+*.toc
