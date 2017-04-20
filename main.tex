@@ -1,0 +1,90 @@
+\documentclass[12pt,a4paper,english,twoside]{report}
+\usepackage{parskip}
+
+%\usepackage[left=2.5cm,right=2.5cm,top=2cm]{geometry}
+\usepackage{geometry}
+
+\usepackage{fontspec}
+\defaultfontfeatures{
+  Extension = .otf,
+  Path = fonts/,
+  UprightFont = *-Regular,
+  BoldFont = *-Bold,
+  ItalicFont = *-Italic,
+  BoldItalicFont = *-BoldItalic,
+}
+\setmainfont[Scale = 0.8]{Merriweather}
+\setmonofont[Scale = 0.8]{SourceCodePro}
+\newfontfamily\headingfont{Sansita}
+
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\headingfont\bfseries}{\LARGE\chaptertitlename\ \thechapter}{5pt}{\Huge}
+\titleformat*{\section}{\LARGE\headingfont\bfseries\itshape}
+\titleformat*{\subsection}{\Large\headingfont\itshape}
+\titleformat*{\subsubsection}{\large\headingfont}
+
+\usepackage{float}
+\floatstyle{boxed}
+
+\usepackage{amsfonts}
+\usepackage{amsmath}
+
+\usepackage{minted}
+\newmintinline[ir]{rust}{}
+\newmintedfile[rustfile]{rust}{}
+
+\usepackage{color}
+\definecolor{mygreen}{RGB}{0, 100, 0}
+\definecolor{mygray}{RGB}{245, 245, 245}
+
+\usepackage{enumerate}
+\usepackage{multicol}
+\usepackage{dirtytalk}
+\usepackage{pdfpages}
+
+\newcommand\icode[1]{\texttt{\textbf{#1}}}
+
+\title{Rust types from JSON samples}
+%\subtitle{A macro based approach to type providers in Rust}
+\author{Erik Vesteraas}
+\date{}
+
+\usepackage[
+  pdftitle={Rust types from JSON samples},
+  pdfauthor={Erik Vesteraas},
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=mygreen,
+  citecolor=mygreen
+]{hyperref}
+\urlstyle{same}
+
+\usepackage[
+  backend=biber,
+  %style=authoryear,
+  maxbibnames=6,
+  isbn=false,
+  %url=false,
+  doi=false
+]{biblatex}
+\addbibresource{refs.bib}
+\setlength\bibitemsep{\baselineskip}
+
+\begin{document}
+
+\pagenumbering{roman}
+\includepdf[pages={-}]{forside.pdf}
+\setcounter{page}{5}
+
+\tableofcontents
+
+\cleardoublepage
+
+\pagenumbering{arabic}
+
+\input{chapters/introduction.tex}
+
+\printbibliography
+
+\end{document}
