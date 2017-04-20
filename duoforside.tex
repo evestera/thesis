@@ -1,0 +1,188 @@
+%% Standard headers:
+
+\DeclareOption{american}{\def \duo@lang {eng}}
+\DeclareOption{english}{\def \duo@lang {eng}}
+\DeclareOption{UKenglish}{\def \duo@lang {eng}}
+\DeclareOption{USenglish}{\def \duo@lang {eng}}
+\DeclareOption{norsk}{\def \duo@lang {bm}}
+\DeclareOption{nynorsk}{\def \duo@lang {nn}}
+
+\ExecuteOptions{norsk}
+\ProcessOptions \relax
+
+
+%% Initial code:
+
+\RequirePackage{graphicx,keyval,xifthen}
+\IfFileExists{type1cm.sty}{\RequirePackage{type1cm}}{}
+\IfFileExists{type1ec.sty}{\RequirePackage{type1ec}}{}
+\RequirePackage[T1]{url}
+
+
+%% The main command:
+
+\newcommand{\duoforside}[1][]{{%
+  \parindent = 0pt   \parskip = 0pt
+  \@ifundefined{hypersetup}{}{\hypersetup{pageanchor=false}}
+  \setkeys{duo@keys}{#1}
+  \duo@page@i
+  \@ifundefined{duo@thesisname@eng}
+    {\if@twoside \duo@blankpage \fi}
+    {\duo@page@ii \duo@page@iii \duo@page@iv}
+  \setcounter{page}{1}
+  \@ifundefined{hypersetup}{}{\hypersetup{pageanchor=true}}
+}}
+
+\newcommand{\duo@empty}{}
+
+\newcommand{\duo@page@i}{%
+  \begin{titlepage}
+    \fontfamily{\duo@font}\fontencoding{T1}
+    \def \and {\\}
+    \centering
+    \fontsize{16}{19pt}\selectfont
+    \null\par
+    \vspace*{-2cm}
+    {\fontsize{24}{28pt}\selectfont \duo@title\par}
+    \vspace{1\baselineskip}
+    \ifx \duo@subtitle = \duo@empty
+    \else
+        {\fontsize{20}{23pt}\fontshape{sl}\selectfont \duo@subtitle\par}
+        \vspace{1\baselineskip}
+    \fi
+    \duo@author\par
+    \vspace{1\baselineskip plus 3fill}
+    \includegraphics[width=6cm]{DUO_UiO_segl}\par
+    \vspace{1\baselineskip plus 4fill}
+    \ifx \duo@kind = \duo@empty
+    \else
+      \duo@kind\par
+      \vspace{1\baselineskip}
+    \fi
+    \ifx \duo@dept = \duo@empty
+    \else
+      \duo@dept\par
+    \fi
+    \ifx \duo@fac = \duo@empty
+    \else
+      \duo@fac\par
+      \vspace{1\baselineskip}
+    \fi
+    \MakeUppercase{\csname duo@uio@\duo@lang\endcsname}\par
+    \vspace{1\baselineskip}
+    {\fontsize{12}{14pt}\selectfont \duo@date\par}
+    \vspace{-2cm}
+    \null
+  \end{titlepage}
+}
+
+\newcommand{\duo@page@ii}{%
+  \duo@blankpage
+}
+
+\newcommand{\duo@page@iii}{%
+  \begin{titlepage}
+    \def \and {\\}
+    \centering
+    \null\vfill
+    {\fontsize{24}{28pt}\fontseries{bx}\selectfont \@title\par}
+    \vfill
+    {\fontsize{20}{23pt}\fontshape{sl}\selectfont \duo@subtitle\par}
+    \vfill
+    {\fontsize{16}{18pt}\selectfont \@author\par}
+    \vfill\vfill\vfill
+    \ifthenelse{\equal{\duo@image}{}}{}
+      {\includegraphics[keepaspectratio,width=10cm,height=8cm]{\duo@image}\par\vfill\vfill}
+  \end{titlepage}
+}
+
+\newcommand{\duo@page@iv}{%
+  \begin{titlepage}
+    \null
+    \vfill
+    \raggedright
+    \def \and {, }
+    \textcopyright~\arabic{duo@cur@year} \duo@author\\[\baselineskip]
+    \leavevmode\duo@title\\[\baselineskip]
+    \url{http://www.duo.uio.no/}
+    \ifthenelse{\equal{\duo@printer}{}}{}
+      {\\[\baselineskip] \csname duo@printertitle@\duo@lang \endcsname:
+        \duo@printer}
+  \end{titlepage}
+}
+
+
+%% The options:
+
+\define@key{duo@keys}{author}{\def \duo@author {#1}}
+\define@key{duo@keys}{date}{\def \duo@date {#1}}
+\define@key{duo@keys}{dept}{\def \duo@dept {#1}}
+\define@key{duo@keys}{fac}{\def \duo@fac {#1}}
+\define@key{duo@keys}{image}{\def \duo@image {#1}}
+\define@key{duo@keys}{kind}{\def \duo@kind {#1}}
+\define@key{duo@keys}{long}[60]{\def \duo@sp {#1}}
+\define@key{duo@keys}{nosp}[0]{\def \duo@sp {#1}}
+\define@key{duo@keys}{option}{\def \duo@opt {(#1)}}
+\define@key{duo@keys}{printer}{\def \duo@printer {#1}}
+\define@key{duo@keys}{program}{\def \duo@program{#1}}
+\define@key{duo@keys}{short}[30]{\def \duo@sp {#1}}
+\define@key{duo@keys}{subtitle}{\def \duo@subtitle {#1}}
+\define@key{duo@keys}{title}{\def \duo@title {#1}}
+
+\newcommand{\duo@uio@eng}{University of Oslo}
+\newcommand{\duo@uio@bm}{Universitetet i Oslo}
+\newcommand{\duo@uio@nn}{Universitetet i Oslo}
+
+\newcommand{\duo@fac@eng}{Faculty of mathematics and natural sciences}
+\newcommand{\duo@fac@bm}{Det matematisk-naturvitenskapelige fakultet}
+\newcommand{\duo@fac@nn}{Det matematisk-naturvitenskaplege fakultet}
+
+\def \duo@author {\@author}
+\providecommand{\duo@date}{\today}
+\def \duo@dept {}
+\def \duo@fac {\csname duo@fac@\duo@lang \endcsname}
+\def \duo@image {}
+\providecommand{\duo@kind}{}
+\def \duo@opt {}
+\def \duo@printer {Reprosentralen, \csname duo@uio@\duo@lang \endcsname}
+\providecommand{\duo@program}{}
+\def \duo@sp {60}
+\def \duo@title {\@title}
+
+
+%% Additional commands:
+
+\newcommand{\subtitle}[1]{\def \duo@subtitle{#1}}
+\subtitle{}
+
+
+%% Find the best font:
+
+\newcommand{\duo@font}{phv}  % Helvetica is always available, but use
+\IfFileExists{t1ua1.fd}{\renewcommand{\duo@font}{ua1}}{} % Arial if possible.
+
+
+%% Determine the term (as in "Spring 2016"):
+
+\newcounter{duo@cur@year}   \setcounter{duo@cur@year}{\the\year}
+\newcounter{duo@cur@month}  \setcounter{duo@cur@month}{\the\month}
+
+\ifthenelse{\theduo@cur@month<7}
+  {\newcommand{\duo@term@eng}{Spring}%
+   \newcommand{\duo@term@bm}{V\aa ren}%
+   \newcommand{\duo@term@nn}{V\aa ren}}
+  {\newcommand{\duo@term@eng}{Autumn}%
+   \newcommand{\duo@term@bm}{H\o sten}%
+   \newcommand{\duo@term@nn}{Hausten}}
+\newcommand{\duo@term}{\csname duo@term@\duo@lang\endcsname}
+\newcommand{\duo@year}{\arabic{duo@cur@year}}
+
+
+%% Other utilities:
+
+\newcommand{\duo@blankpage}{%
+    \thispagestyle{empty}
+    \null
+    \newpage}
+
+\endinput

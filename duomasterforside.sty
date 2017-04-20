@@ -1,0 +1,41 @@
+%% Identification part:
+
+\NeedsTeXFormat{LaTeX2e}[1994/12/01]
+
+\ProvidesClass{duomasterforside}[2017/03/22 v1.05 UiO document class]
+
+%% Specify various texts in the correct language:
+
+\newcommand{\duo@optionname@eng}{option}
+\newcommand{\duo@optionname@bm}{studieretning}
+\newcommand{\duo@optionname@nn}{studieretning}
+\newcommand{\duo@correct@option}{\csname duo@optionname@\duo@lang\endcsname}
+
+\newcommand{\duo@thesisname@eng}{Thesis submitted for the
+  degree of\\ Master in}
+\newcommand{\duo@thesisname@bm}{Oppgave for graden\\ Master i}
+\newcommand{\duo@thesisname@nn}{Oppg\aa ve for graden\\ Master i}
+
+\newcommand{\duo@credit@eng}{credits}
+\newcommand{\duo@credit@bm}{studiepoeng}
+\newcommand{\duo@credit@nn}{studiepoeng}
+
+\newcommand{\duo@printertitle@eng}{Printed}
+\newcommand{\duo@printertitle@bm}{Trykk}
+\newcommand{\duo@printertitle@nn}{Trykk}
+
+\newcommand{\duo@kind}{\csname duo@thesisname@\duo@lang\endcsname{}
+  \duo@program\par
+  \duo@opt
+  \ifthenelse{\duo@sp=0}{}{\par
+  \duo@sp~\csname duo@credit@\duo@lang \endcsname}}
+
+%% Define a suitable document date, like "Spring 2016":
+
+\newcommand{\duo@date}{\duo@term~\duo@year}
+
+%% Load generic part:
+
+\input{duoforside}
+
+\endinput
