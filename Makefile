@@ -4,8 +4,8 @@
 .PHONY: default
 default: main.pdf
 
-forside.pdf: forside.tex
-	pdflatex $<
+forside.pdf: forside/forside.tex
+	cd forside; pdflatex -output-directory=.. $<
 
 main.pdf: main.tex forside.pdf chapters/*.tex
 	lualatex -shell-escape $<
