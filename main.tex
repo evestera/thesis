@@ -1,8 +1,19 @@
-\documentclass[12pt,a4paper,english,twoside]{report}
+\documentclass[12pt,a4paper,english,twoside,openright]{report}
 \usepackage{parskip}
 
 %\usepackage[left=2.5cm,right=2.5cm,top=2cm]{geometry}
-\usepackage{geometry}
+\usepackage[includeheadfoot]{geometry}
+\setlength{\headheight}{15pt}
+
+\usepackage{emptypage}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\renewcommand{\sectionmark}[1]{ \markright{\thesection\ #1}{} }
+\fancyhead[RE,LO]{\rightmark}
+%\fancyfoot[CE,CO]{\thepage}
+%\fancyfoot[LE,RO]{\thepage}
 
 \usepackage{fontspec}
 \defaultfontfeatures{
@@ -26,13 +37,23 @@
 
 \usepackage{float}
 \floatstyle{boxed}
+\restylefloat{figure}
 
 \usepackage{amsfonts}
 \usepackage{amsmath}
 
+\DeclareMathOperator{\csh}{csh}
+\DeclareMathOperator{\opt}{opt}
+
+\usepackage{tikz}
+\usetikzlibrary{graphs}
+\usetikzlibrary{graphdrawing}
+\usegdlibrary{layered}
+
 \usepackage{minted}
 \newmintinline[ir]{rust}{}
 \newmintedfile[rustfile]{rust}{}
+% \rustfile[firstline=2,lastline=7,gobble=4]{rustcode/examples/references.rs}
 
 \usepackage{color}
 \definecolor{mygreen}{RGB}{0, 100, 0}
@@ -43,7 +64,16 @@
 \usepackage{dirtytalk}
 \usepackage{pdfpages}
 
-\newcommand\icode[1]{\texttt{\textbf{#1}}}
+\newcommand\icode[1]{\texttt{\textbf{\detokenize{#1}}}}
+
+\newcommand\morestuff{\textcolor{red}{ More stuff here... }}
+
+\catcode`\‹ =\active
+\def‹#1›{\texttt{\textbf{\detokenize{#1}}}}
+
+\catcode`\« =\active
+\def«#1»{\emph{\detokenize{#1}}}
+\def\fsharpdata{\emph{F\# Data}}
 
 \title{Rust types from JSON samples}
 %\subtitle{A macro based approach to type providers in Rust}
@@ -53,6 +83,7 @@
 \usepackage[
   pdftitle={Rust types from JSON samples},
   pdfauthor={Erik Vesteraas},
+  unicode=true,
   colorlinks=true,
   linkcolor=black,
   urlcolor=mygreen,
@@ -81,9 +112,16 @@
 
 \cleardoublepage
 
+\input{chapters/preface.tex}
+
+\cleardoublepage
+
 \pagenumbering{arabic}
 
 \input{chapters/introduction.tex}
+\input{chapters/project-presentation.tex}
+\input{chapters/code-generation.tex}
+\input{chapters/future-work.tex}
 
 \printbibliography
 

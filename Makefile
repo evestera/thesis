@@ -5,10 +5,10 @@
 default: main.pdf
 
 forside.pdf: forside/forside.tex
-	cd forside; pdflatex -output-directory=.. $<
+	cd forside; xelatex -output-directory=.. $<
 
 main.pdf: main.tex forside.pdf chapters/*.tex
-	lualatex -shell-escape $<
+	xelatex -shell-escape $<
 	biber $(basename $<)
-	lualatex -shell-escape $<
-	lualatex -shell-escape $<
+	xelatex -shell-escape $<
+	xelatex -shell-escape $<

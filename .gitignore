@@ -10,3 +10,4 @@ _minted-*/
 *.pdf
 *.synctex.gz
 *.toc
+*.pyg

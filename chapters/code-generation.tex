@@ -1,0 +1,65 @@
+%!TEX root = ../main.tex
+
+\chapter{Code generation}
+
+The code generation is based on the algorithms used in \fsharpdata\ as presented in the paper \emph{Types from Data: Making Structured Data First-class Citizens in F\#}\cite{fsharp-types-from-data}.
+
+\section{Shape inference}
+
+\begin{figure}[ht!]
+\begin{align*}
+\csh(a, a)               &=  a               & (eq) \\
+\csh(‹int›, ‹float›)     &= ‹float›          & (num) \\
+\csh(a, ‹null›)          &= \opt(a)          & (null) \\
+\csh(a, ‹optional(›b‹)›) &= \opt(\csh(a, b)) & (opt) \\
+\csh([], [a])            &= [a]              & (empty) \\
+\csh([a], [b])           &= [\csh(a, b)]     & (arr) \\
+\csh([a], [b])           &= [\csh(a, b)]     & \color{red} (obj) \\
+\csh(a, b)               &= ‹any›            & (any) \\
+\\
+\opt(‹null›) &= ‹null› \\
+\opt(‹any›)  &= ‹any› \\
+\opt(‹optional(›a‹)›) &= ‹optional(›a‹)› \\
+\opt(a) &= ‹optional(›a‹)›
+\end{align*}
+\caption{The common shape function}
+\label{fig:csh}
+\end{figure}
+
+\section{Generating rust types}
+
+\section{Code generation dilemmas}
+\label{sec:design-considerations}
+
+When inferring shapes and generating code based on JSON one has to work with incomplete data. As such it is unavoidable that some choices have to be made. Unfortunately several of these choices do not present any alternative that is clearly better in all cases.
+
+\begin{listing}[ht!]
+\begin{minted}{json}
+[
+  {
+    "a": 1
+  },
+  {
+    "b": 1
+  }
+]
+\end{minted}
+\caption{JSON Dilemma \#1}
+\label{lst:json-dilemma-1}
+\end{listing}
+
+\begin{listing}[ht!]
+\begin{minted}{rust}
+struct S {
+    a: Option<i32>,
+    b: Option<i32>,
+}
+
+enum E {
+    A { a: i32 },
+    B { b: i32 },
+}
+\end{minted}
+\caption{JSON Dilemma \#1 - Two solutions}
+\label{lst:json-dilemma-1-rs}
+\end{listing}

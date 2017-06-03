@@ -1,3 +1,293 @@
+%!TEX root = ../main.tex
+
 \chapter{Introduction}
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+In this thesis I will show how we achieve type-safe access in the Rust programming language to data encoded in JSON format, provided that we at compile time (or earlier) have access to a sample with the same structure as the data we wish to read at runtime.
+
+This is achieved by drawing inspiration from a feature of the F\# programming languages called type providers and approximating this feature in Rust with -- among other tools -- a procedural macro.
+
+\section{The Rust programming language}
+
+The Rust programming language is a modern, open source, systems programming language with C-like surface syntax. It is a statically typed language with type inference, with a focus on memory safety and zero cost abstractions. It does not use a garbage collector and the Rust core library can be used without access to heap allocation.
+
+While the basic syntax of Rust can be said to be C-like it also has a lot of functionality and syntax reminiscent of functional languages, and in particular languages of the ML-family. Features such as closures, pattern matching and monadic error handling are available and a significant part of idiomatic Rust code.
+
+What follows is a very basic introduction to the parts of Rust we need to talk about in this thesis. For more details see \href{https://doc.rust-lang.org/book/}{the Rust book}\footnote{\url{https://doc.rust-lang.org/book/}}.
+
+\subsection{Structs}
+
+\begin{listing}[ht!]
+\begin{minted}{rust}
+struct Person {
+    name: String,
+    age: i64,
+}
+\end{minted}
+\caption{A basic Rust struct}
+\label{lst:struct}
+\end{listing}
+
+A struct declaration in Rust is a number of fields with types. Rust is not object oriented, and there is no inheritance for structs.
+
+\subsection{Enums}
+
+\begin{listing}[ht!]
+\begin{minted}{rust}
+enum Option<T> {
+    None,
+    Some(T),
+}
+\end{minted}
+\caption{The enumerated type ‹Option› in Rust}
+\label{lst:enum}
+\end{listing}
+
+An enum in Rust is a data type that is one alternative from a number of variants. A declaration of an enum, as seen in listing~\ref{lst:enum} is given as a list of variant names, used as constructors. Each variant can optionally carry some associated data.
+
+Rust supports pattern matching on enum types, and verifies that any match is exhaustive.
+
+\subsection{Traits}
+
+\begin{listing}[ht!]
+\begin{minted}{rust}
+trait Clone {
+    fn clone(&self) -> Self;
+}
+
+#[derive(Debug)]
+struct Bag {
+    label: String
+}
+
+impl Clone for Bag {
+    fn clone(&self) -> Self {
+        Bag {
+          label: self.label.clone()
+        }
+    }
+}
+\end{minted}
+\caption{The Rust trait ‹Clone› and examples of implementation}
+\label{lst:trait}
+\end{listing}
+
+A trait specifies methods that a type needs to provide to implement the trait.
+
+Some traits can be derived -- automatically implemented -- by the compiler. It is also possible to write libraries for deriving custom traits. Deriving a trait usually requires that the constituent types also implements the trait. E.g. to derive ‹Clone› for ‹Ty› you need to be able to clone all parts of ‹Ty›.
+
+Listing~\ref{lst:trait} shows a simplified version of the trait ‹Clone›, a struct which automatically derives the trait ‹Debug› and manually implements ‹Clone›.
+
+\subsection{Macros}
+
+
+\subsection{Cargo}
+
+While strictly speaking not a part of the Rust programming language, Cargo comes with every normal Rust installation. Cargo is the package manager and build tool for the Rust ecosystem. \morestuff
+
+\section{JSON}
+
+JSON is a text based data format for structured data. It is very commonly used as a data interchange format in modern HTTP-based architectures. JSON was originally based on a subset of the JavaScript programming language, but is designed to be language-independent and is now used in interaction between applications written in practically all programming languages.
+
+The format as described by the specifications from IETF \cite{RFC7159} and ECMA \cite{ECMA404} is very simple.
+
+JSON values can only be an object, array, number or string, or the literals ‹true›, ‹false› or ‹null›.
+
+A JSON object is an unordered collection of mappings from keys (that are JSON strings) to JSON values. As this closely corresponds to what is usually referred to as a map, or a dictionary in most programming languages, the term object may seem like a bit of a misnomer here, arising from JSONs background as a subset of JavaScript.
+
+A JSON array is an ordered collection of JSON values. It is worth noting that JSON places no restriction on the types of the values of the array, and as such it can sometimes be a heterogenous collection.
+
+\begin{listing}[ht!]
+\begin{minted}{json}
+{
+  "name": "Bob",
+  "age": 24,
+  "phoneNumbers": [
+    {
+      "areaCode": 456,
+      "number": 80931
+    }
+  ]
+}
+\end{minted}
+\caption{An example JSON object}
+\label{lst:json1}
+\end{listing}
+
+Listing~\ref{lst:json1} shows a basic example of a JSON object. Since JSON objects and arrays can themselves contain objects and arrays, data serialized as JSON can be arbitrarily deeply nested, but JSON itself has no support for any kind of references.
+
+\subsection{Reading JSON in dynamically typed languages}
+
+\begin{listing}[ht!]
+\begin{minted}{js}
+var parsed = JSON.parse(jsonString);
+console.log(parsed.phoneNumbers[0].areaCode);
+\end{minted}
+\caption{Printing the first areaCode in JavaScript}
+\label{lst:readjsonjs}
+\end{listing}
+
+\begin{listing}[ht!]
+\begin{minted}{python}
+parsed = JSON.load(jsonString)
+print(parsed.phoneNumbers[0].areaCode)
+\end{minted}
+\caption{Printing the first areaCode in Python}
+\label{lst:readjsonpy}
+\end{listing}
+
+In dynamically typed programming languages reading data from deserialized JSON is relatively straightforwards, as seen in listing~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy}. The code in these listings can however fail at any point if the deserialized data does not match expectations, so in many real world use cases the code will be a bit more complex.
+
+\subsection{Reading JSON in statically typed languages}
+
+In statically typed programming languages reading data from deserialized JSON often requires a bit more effort. There are several possible (and relatively common) approaches.
+
+For my examples I will use Rust, but first I need to introduce «Serde»:
+
+\subsubsection{Serde}
+
+«Serde» is a Rust framework for serialization and deserialization. The core of the framework is independent of the source/target data format, and the input/output of specific data formats is provided by separate crates.
+
+«Serde» works by providing two traits, ‹Serialize› and ‹Deserialize›, that Rust types can implement. The core library has already implemented these traits for the most common data types like ‹i64›, ‹String›, ‹Vec› and ‹HashMap›. In addition, the crate «serde_derive» provides code to derive the traits for custom types.
+
+Once a Rust type implements the necessary trait, data can be converted with the various format specific crates. «serde_json» is the crate that provides the ability to interface with JSON, as well as various additional code that is useful when working with JSON.
+
+\subsubsection{Catchall types}
+
+\begin{listing}[ht!]
+\begin{minted}{rust}
+enum Value {
+    Null,
+    Bool(bool),
+    Number(Number),
+    String(String),
+    Array(Vec<Value>),
+    Object(Map<String, Value>),
+}
+\end{minted}
+\caption{An enumerated type in Rust for JSON values}
+\label{lst:valueenum}
+\end{listing}
+
+Listing~\ref{lst:valueenum} shows the Rust type ‹Value› from the library «serde_json». Any legal JSON can be encoded by this type. Similar types can be created in most programming languages. However, working with such types in a type-safe manner can be both tedious and error-prone. The code in listing~\ref{lst:readjsonrs1} does approximately the same thing as the code in listing~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy}, but is quite clearly a lot more complicated. It does have one advantage though, no possibility of a runtime error when accessing the data.
+
+\begin{listing}[ht!]
+\begin{minted}{rust}
+let parsed: Value = serde_json::from_str(json_str)?;
+
+if let Some(array) = parsed.get("phoneNumbers") {
+    if let Some(obj) = array.get(0) {
+        if let Some(num) = obj.get("areaCode") {
+            println!("{}", num);
+        }
+    }
+}
+\end{minted}
+\caption{Printing the first areaCode in Rust}
+\label{lst:readjsonrs1}
+\end{listing}
+
+% if let Some(num) = parsed.get("phoneNumbers")
+%                          .and_then(|v| v.get(0))
+%                          .and_then(|v| v.get("areaCode")) {
+%     println!("{}", num);
+% }
+
+\subsubsection{Stringly typed code}
+
+One way to make the catchall types easier to work with is to create helpers that essentially eschew the advantages of type checking, one way or the other. Listing~\ref{lst:readjsonrs2} shows two alternative ways to read from the parsed data. \morestuff
+
+\begin{listing}[ht!]
+\begin{minted}{rust}
+let parsed: Value = serde_json::from_str(json_str)?;
+
+println!("{}", parsed["phoneNumbers"][0]["areaCode"]);
+
+if let Some(num) = parsed.pointer("/phoneNumbers/0/areaCode") {
+    println!("{}", num);
+}
+\end{minted}
+\caption{Printing the first areaCode in Rust}
+\label{lst:readjsonrs2}
+\end{listing}
+
+\subsubsection{Custom types}
+
+What we actually want are custom types, that accurately reflects the actual data. This way, any mismatches between our assumptions and the actual shape of the data is revealed at the time of parsing. And accessing any particular field is just as type-safe as any other native data in the programming language.
+
+Listing~\ref{lst:readjsonrs3} shows an example of using such custom data types with the «serde» framework. However, even for this small example this approach required 9 significant lines of code for the types. And with real world data sources actual JSON data can be significantly larger and more complex. So while custom types are preferable once written, actually writing them can often be a significant hurdle.
+
+\begin{listing}[ht!]
+\begin{minted}{rust}
+#[derive(Deserialize)]
+struct Person {
+    name: String,
+    age: i64,
+    phoneNumbers: Vec<PhoneNumber>,
+}
+
+#[derive(Deserialize)]
+struct PhoneNumber {
+    areaCode: i64,
+    number: i64,
+}
+
+let parsed: Person = serde_json::from_str(json_str)?;
+
+println!("{}", parsed.phoneNumbers[0].areaCode);
+\end{minted}
+\caption{Printing the first areaCode in Rust}
+\label{lst:readjsonrs3}
+\end{listing}
+
+\section{Type providers in F\#}
+
+The F\# programming language is an open source functional programming language for the Common Language Runtime with a ML-like surface syntax. The language feature I will focus on here is what is known as a type provider.
+
+A type provider provides access to an external, complex resource, in a statically typed environment, without requiring the programmer to spell out type information. It does so not by working around the type system, but by generating type information at compile time, allowing code accessing the resource to be statically type checked.
+
+\begin{listing}[ht!]
+\begin{minted}{fsharp}
+open FSharp.Data
+
+type Simple = JsonProvider<""" { "name":"John", "age":94 } """>
+
+[<EntryPoint>]
+let main argv =
+    let simple = Simple.Parse(""" { "name":"Tomas", "age":4 } """)
+    printfn "%d %s" simple.Age simple.Name
+    // prints "Tomas 4"
+    0
+\end{minted}
+\caption{Minimal example of the use of a type provider in F\#}
+\label{lst:fsharpsample}
+\end{listing}
+
+In listing~\ref{lst:fsharpsample} I have provided a simple example of the use of a type provider\footnote{Adapted from the documentation for the particular type provider shown: \url{http://fsharp.github.io/FSharp.Data/library/JsonProvider.html}}. A type is first generated from a sample at compile time, and this type is then used to parse another instance of the same type at runtime. The parsed object is then used as a fully native object.
+
+To reiterate: the expression ‹JsonProvider<...>› is evaluated at compile time and provides a type to the compiler. This lets the compiler type check expressions like ‹simple.Age›. The compiler also provides functionality that makes it easy for implementors of editors to provide autocomplete and similar functionality for types generated by type providers.
+
+Both the sample string and the string providing the instance could have been replaced by paths to either local or remote resources. Thus, when writing code that talks to a JSON based API, it is often possible to just point the type provider to an endpoint or a sample from some documentation, and get the types one needs to start working.
+
+\subsection{Advantages of type providers}
+
+% Explorative programming
+
+% "Type checking" external resources
+
+
+
+\subsection{Disadvantages of type providers}
+
+While type providers have significant advantages, they also have some disadvantages. Type providers are essentially a code generation tool. However, type providers do not give the user access to the generated code. In part this is because some type providers for F\# generate erased types which are not really representable by the normal code of F\#. Some type providers also generate types on demand, because the accessed data is too large to represent or otherwise impractical to generate all at once.
+
+% Understanding code you cannot see
+
+This fact means that there is no option to look at the generated code to understand what is going on and to inspect the structure of the parsed data. While some of the same understanding can be achieved by looking at the autocomplete suggestions it is often easier to understand the structure by looking at the actual types.
+
+% Migration path
+
+No access to the generated code also causes a certain amount of lock-in. Without access to the code, trying to migrate a project using type providers to manually written types forces a complete rewrite of the types provided by the type provider. In the case of parsing JSON and generating types from it there are many trade-offs that have to be made, and thus there might be reasons for such a migration as a project develops. I will come back to these trade-offs in section~\ref{sec:design-considerations}.
+
+% Network access
+
+A completely different issue with certain type providers is that they provide the greatest benefit with concern to the type checking when verifying the use of an external resource. However if access to this external resource requires network access, this causes the compilation of the program to require network access for every build. \morestuff
