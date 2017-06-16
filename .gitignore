@@ -11,3 +11,4 @@ _minted-*/
 *.synctex.gz
 *.toc
 *.pyg
+.deploy-*
