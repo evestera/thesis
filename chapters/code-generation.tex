@@ -6,15 +6,34 @@ The code generation is based on the algorithms used in \fsharpdata\ as presented
 
 \section{Shape inference}
 
+\placeholder{Verbally step through and explain the inference algorithm. Difference from \fsharpdata.}
+
+\begin{figure}[ht!]
+\begin{align*}
+\shap(‹Null›)          &= ‹null› \\
+\shap(‹Bool(›a‹)›)     &= ‹bool› \\
+\shap(‹Number(›a‹)›)   &= \left\{\begin{array}{ll}
+  ‹int›   & \text{if } a \in \mathbb{Z} \\
+  ‹float› & \text{otherwise}
+\end{array}\right.\\
+\shap(‹String(›a‹)›)   &= ‹string› \\
+\shap(‹Array(›[\ ]‹)›) &= [\ ] \\
+\shap(‹Array(›[a_1, a_2, \cdots, a_n]‹)›) &= [\fold(\csh, \shap(a_1), [\shap(a_2), \cdots, \shap(a_n)])] \\
+\shap(‹Object(›\{ k_1 : v_1, \cdots, k_n : v_n \}‹)›) &= \{ k_1 : \shap(v_1), \cdots, k_n : \shap(v_n) \}
+\end{align*}
+\caption{The function mapping JSON values to shapes}
+\label{fig:shap}
+\end{figure}
+
 \begin{figure}[ht!]
 \begin{align*}
 \csh(a, a)               &=  a               & (eq) \\
 \csh(‹int›, ‹float›)     &= ‹float›          & (num) \\
 \csh(a, ‹null›)          &= \opt(a)          & (null) \\
 \csh(a, ‹optional(›b‹)›) &= \opt(\csh(a, b)) & (opt) \\
-\csh([], [a])            &= [a]              & (empty) \\
+\csh([\ ], [a])          &= [a]              & (empty) \\
 \csh([a], [b])           &= [\csh(a, b)]     & (arr) \\
-\csh([a], [b])           &= [\csh(a, b)]     & \color{red} (obj) \\
+\csh(a = \{ \cdots \}, b = \{ \cdots \}) &= \cfs(a, b) & (obj) \\
 \csh(a, b)               &= ‹any›            & (any) \\
 \\
 \opt(‹null›) &= ‹null› \\
@@ -26,12 +45,35 @@ The code generation is based on the algorithms used in \fsharpdata\ as presented
 \label{fig:csh}
 \end{figure}
 
-\section{Generating rust types}
+\begin{figure}[ht!]
+\begin{gather*}
+\cfs(a = \{ k_1 : v_1, \cdots, k_n : v_n \}, b = \{ k_1 : v'_1, \cdots, k_n : v'_n \}) = \\
+\{ k_1 : \left( \begin{array}{ll}
+  \csh(v_1, v'_1) & \text{if } k_1 \in a \cap b \\
+  \opt(v_1) & \text{if } k_1 \notin b \\
+  \opt(v'_1) & \text{if } k_1 \notin a
+\end{array}\right), \cdots, k_n : \left( \begin{array}{ll}
+  \csh(v_n, v'_n) & \text{if } k_n \in a \cap b \\
+  \opt(v_n) & \text{if } k_n \notin b \\
+  \opt(v'_n) & \text{if } k_n \notin a
+\end{array}\right) \}
+\end{gather*}
+\caption{The function for finding the common shape of two records}
+\label{fig:ufi}
+\end{figure}
+
+\section{Generating Rust types}
 
 \section{Code generation dilemmas}
 \label{sec:design-considerations}
 
 When inferring shapes and generating code based on JSON one has to work with incomplete data. As such it is unavoidable that some choices have to be made. Unfortunately several of these choices do not present any alternative that is clearly better in all cases.
+
+\placeholder{Option vs Enum, detection of entirely separate types}
+
+\placeholder{Option vs Default, missing fields}
+
+\placeholder{Extra fields}
 
 \begin{listing}[ht!]
 \begin{minted}{json}
@@ -63,3 +105,13 @@ enum E {
 \caption{JSON Dilemma \#1 - Two solutions}
 \label{lst:json-dilemma-1-rs}
 \end{listing}
+
+\section{Extensions}
+
+\placeholder{Describe (and maybe show) extension of inference to AnyOf / tagged any types.}
+
+\placeholder{Detection of tuple types.}
+
+\placeholder{Inferring types from multiple samples/sample-sets but ensuring that they can still work together. Show how this can already be done to a certain extent using \url{https://github.com/lloydmeta/frunk}}
+
+\placeholder{Collapsing identical shapes}

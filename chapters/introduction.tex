@@ -79,10 +79,41 @@ Listing~\ref{lst:trait} shows a simplified version of the trait ‹Clone›, a s
 
 \subsection{Macros}
 
+A macro system is in short a language feature that allows a programmer to write code that does source-to-source transformations. In Rust there are two categories of macros: declarative macros and procedural macros.
+
+\begin{listing}[ht!]
+\begin{minted}{rust}
+// declaration:
+macro_rules! double {
+    ($e: expr) => ({
+        let temp = $e;
+        temp + temp
+    })
+}
+
+// usage:
+let ten = double!(2 + 3);
+\end{minted}
+\caption{A simple declarative macro in Rust}
+\label{lst:macro-rules}
+\end{listing}
+
+Declarative macros in Rust are also known as \say{macros by example} or \say{pattern-based macros}. These are syntactic, hygienic macros that with a syntax similar to pattern matching, match input patterns to expanded source code. Listing~\ref{lst:macro-rules} show declaration and usage of a very basic declarative macro. The macro ‹double› has a single rule transforming a single expression to a block expression. A macro can have multiple rules and each pattern can be a combination of tokens and metavariables.
+
+Procedural macros are macros where the expansion is done by running a procedure rather than by evaluating rules. To create a procedural macro in Rust you create a library that exposes a function that takes a ‹TokenStream› as input and outputs a ‹TokenStream›. Since this library and function can use arbitrary Rust code to generate its output, it can do things that are outside the scope of the normal compiler. Examples of things there are already procedural macro libraries for are:
+
+\begin{itemize}
+  \item Generating a type-safe DSL (at compile time) for communicating with an SQL database, by inspecting said database.\footnote{\url{http://diesel.rs/}}
+  \item Compiling graphics shaders at Rust compile time.\footnote{\url{https://github.com/tomaka/vulkano}}
+\end{itemize}
+
+
 
 \subsection{Cargo}
 
-While strictly speaking not a part of the Rust programming language, Cargo comes with every normal Rust installation. Cargo is the package manager and build tool for the Rust ecosystem. \morestuff
+While strictly speaking not a part of the Rust programming language, Cargo comes with every normal Rust installation. Cargo is the package manager and build tool for the Rust ecosystem.
+
+For developers from languages with strong tooling support this may not seem like a very big deal. However, for both C and C++ adding a dependency to a project is a major decision due to the burden it places on developers and sometimes even users.
 
 \section{JSON}
 
@@ -270,11 +301,19 @@ Both the sample string and the string providing the instance could have been rep
 
 \subsection{Advantages of type providers}
 
-% Explorative programming
+% Advantages over what?
 
 % "Type checking" external resources
 
+The most significant benefit of type providers is that they enable type safe access to external resources, significantly improving type checking for sections of code using data from a type provider.
 
+% Explorative programming / Tooling help
+
+As mentioned, such type safe access can also be achieved by manually writing the custom types, but the ease of use of a type provider makes it very easy to add a new external resource and start experimenting.
+
+When working with external data, the code we write encode our assumptions about the data we are working with. E.g. if I have parsed some data into a variable ‹p› and I write code like ‹let real_name: String = p.name›, the code encodes my assumptions that the data has a field with the name ‹name›, and that said field is a string. If this is the only use of the parsed data \morestuff
+
+% Detect API changes
 
 \subsection{Disadvantages of type providers}
 
@@ -291,3 +330,5 @@ No access to the generated code also causes a certain amount of lock-in. Without
 % Network access
 
 A completely different issue with certain type providers is that they provide the greatest benefit with concern to the type checking when verifying the use of an external resource. However if access to this external resource requires network access, this causes the compilation of the program to require network access for every build. \morestuff
+
+% Build can break without code changes

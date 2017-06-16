@@ -96,6 +96,8 @@ Both of these kinds of interfaces are also quite bad interface-wise if the user 
 
 The crate «json_typegen_web» provides a binary that both provides a web API for the code generation, as well as hosting the static HTML/JavaScript files providing a frontend to this API.
 
+\placeholder{Demonstrate how CLI or web interface can be used together with proc-macro. Explain how this then gives autocomplete etc.}
+
 \section{Shared code}
 
 As seen in figure~\ref{fig:crates} the macro, web interface and CLI all depend on a common crate, «json_typegen_shared». This crate contains the actual inference and code generation logic. The following data flow is common to all three interfaces:
@@ -106,3 +108,19 @@ As seen in figure~\ref{fig:crates} the macro, web interface and CLI all depend o
   \item Infer type shapes from the JSON values
   \item Generate Rust code from the type shapes
 \end{enumerate}
+
+\section{Configurability}
+
+\placeholder{Describe how the goal of configurability differs from \fsharpdata and the consequences of this.}
+
+\placeholder{Add/remove derives}
+
+\placeholder{Visibility}
+
+\placeholder{Explain JSON pointers (Maybe in introduction instead?)}
+
+\placeholder{Configuration/inference hints through JSON pointers}
+
+\section{Editor plugins}
+
+\placeholder{Describe idea behind \url{https://github.com/evestera/atom-json-typegen} and superficially how it works/can work.}
