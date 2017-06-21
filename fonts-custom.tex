@@ -1,0 +1,19 @@
+\usepackage{fontspec}
+\defaultfontfeatures{
+  Extension = .otf,
+  Path = fonts/,
+  UprightFont = *-Regular,
+  BoldFont = *-Bold,
+  ItalicFont = *-Italic,
+  BoldItalicFont = *-BoldItalic,
+}
+\setmainfont[Scale = 0.8]{Merriweather}
+\setmonofont[Scale = 0.8]{SourceCodePro}
+\newfontfamily\headingfont{Sansita}
+
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\headingfont\bfseries}{\LARGE\chaptertitlename\ \thechapter}{5pt}{\Huge}
+\titleformat*{\section}{\LARGE\headingfont\bfseries\itshape}
+\titleformat*{\subsection}{\Large\headingfont\itshape}
+\titleformat*{\subsubsection}{\large\headingfont}
