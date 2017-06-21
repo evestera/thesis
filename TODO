@@ -1,0 +1,108 @@
+Pros/Cons of type providers
+  Pros:
+  - Type checking
+  - Tooling help
+  - Detect API changes
+  Cons:
+  - Network access
+  - Additional compile time
+  - Build can break without code changes
+
+Proof that we can derive traits that apply to base types. Use Default as example.
+
+Shape inference
+- Basic details
+- Explain any changes from F# Data
+
+Show conditional compilation and synergy from having 3 interfaces.
+
+Mention other type-provider-like things in Rust
+diesel
+serde
+println
+
+Code generation
+syn/quote?
+rustfmt?
+
+Explain how serde and our generated code is not specific to JSON, and our defined types can be used to translate between JSON and other formats.
+
+Write about Rust Language Server and LSP?
+
+Extend to tagged any types
+How to use these to create Enums
+
+Tuple detection ("Rust has a way to represent ['foo', 3]: (string, i64)")
+Arrays are sometimes used as tuples
+Maybe introduce concept of trivially common shapes: (Shape, Shape) -> Option<Shape>
+Prefer (int, string) to [any]
+struct Tuple {
+    /// Count the number of samples this data is based on
+    /// Don't assume something is a tuple with just one sample
+    seen: i64,
+    /// Length is an implicit field based on shapes Vec
+    shapes: Vec<Shape>,
+}
+
+Track seen values of numbers (for boolean detection)
+Track seen values of strings (for enum detection)
+
+Any way to detect objects used as maps?
+
+Inference hints using JSON pointers?
+"/foo/bar/*" "HashMap<String, _>"
+"/foo/bar/*" "map"
+"/*/type" "enum" (or "tag")
+"/foo/bar" "(int, string)"
+"/foo/bar" "tuple"
+
+{
+  "top_left": { "x": 4, "y": 5 },
+  "bottom_right": { "x": 2, "y": 9 }
+}
+"/top_left" type_name Point
+"/top_left" same_as "/bottom_right"
+
+Default providers using JSON pointers?
+
+Reuse identical types
+Collapse identical shapes? Algorithm?
+  {
+    "buyer": { ... },
+    "seller": { ... }
+  }
+Hints: "/buyer" same_as "/seller"
+
+
+Inferring types from multiple samples/sample-sets but ensuring that they can still work together.
+Frunk, Generic, LabelledGeneric
+  #[derive(LabelledGeneric)]
+Inferring at the same time:
+  multi_typegen!(A, "sampleA", B "sampleB")
+  Depends on ability to reuse identical types
+Inference hints:
+  typegen!(A, "sampleA", {
+    hints: {
+      "/*/owner", type_name, Person
+    }
+  });
+  typegen!(B, "sampleB", {
+    hints = {
+      "/buyer", use_type, Person
+    }
+  });
+
+Diagrams from shapes?
+Shapes to schemas?
+
+json_typegen Atom package
+expand macro invocation with code using binary (or maybe web API)
+notify on changes (though a git diff would do the same thing)
+
+use CARGO_MANIFEST_DIR to find local files
+
+
+Easy way to transition between interfaces. E.g. copy-paste macro into web interface to see result. Output macro in web interface that is equivalent to the current form input. Etc.
+Doing this would mean essentially writing a minimal macro parser and generator. I.e.
+MacroString -> (SampleSource, Config)
+(SampleSource, Config) -> MacroString
