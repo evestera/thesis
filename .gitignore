@@ -5,6 +5,8 @@ _minted-*/
 *.bcf
 *.blg
 *.log
+*.lof
+*.lol
 *.out
 *.run.xml
 *.pdf
