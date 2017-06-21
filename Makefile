@@ -7,13 +7,13 @@ default: main.pdf
 forside.pdf: forside/forside.tex
 	cd forside; xelatex -output-directory=.. $<
 
-main.pdf: main.tex forside.pdf chapters/*.tex
+main.pdf: main.tex forside.pdf chapters/*.tex fonts-custom.tex
 	lualatex -shell-escape $<
 	biber $(basename $<)
 	lualatex -shell-escape $<
 	lualatex -shell-escape $<
 
-nofonts.pdf: main.tex main.pdf
+nofonts.pdf: main.tex main.pdf fonts-none.tex
 	mv main.pdf main-bak.pdf
 	ln -sf fonts-none.tex fonts.lnk
 	lualatex -shell-escape $<
