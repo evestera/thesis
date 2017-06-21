@@ -225,15 +225,37 @@ struct Order {
 \label{lst:string-date}
 \end{listing}
 
-It is probably not a good idea to try to cover every edge case, as such a goal could quickly lead the code to become too complex to maintain and expand. We can however make an effort to cover the most common cases, and thus increase the usefulness of the project for most people.
+Listing~\ref{lst:string-date} shows a simple example of a case where the inferred type falls short of what the programmer would write by hand. There is no ‹Date› type in the Rust standard library, and as such, even with inspection of the ‹String› it would not be natural for the code generation to infer a ‹Date› type by default. While the ‹Date› type specifically may conceivably be added to the standard library in the future, the same example could apply to all manner of domain specific types.
 
-\placeholder{Describe how the goal of configurability differs from \fsharpdata\ and the consequences of this.}
+In such cases where the generated code falls short the programmer has a few alternatives:
 
-\placeholder{Add/remove derives}
+\begin{itemize}
+  \item They can simply use the generated code as is, and convert from ‹String› to ‹Date› as necessary. If the suboptimal type is used frequently in the code though, littering the code with snippets like ‹Date::from(order.registered)› becomes frustrating pretty fast.
+  \item They can customize the generated code by hand, and reapply the customizations whenever the code has to be generated again. Since this requires access to the generated code this alternative means abandoning any procedural macro or type provider. As it also makes the customized code incompatible with the generated code conditional compilation will not help here either.
+  \item Finally, they can customize the generated code by hand, and completely abandon the code generation tool.
+\end{itemize}
 
-\placeholder{Visibility}
+All of these alternatives have significant downsides, so if configuration of the code generation is possible, and does not come with significant downsides of its own it would in most cases be clearly preferable.
 
-\placeholder{Explain JSON pointers (Maybe in introduction instead?)}
+While it is clear that «json_typegen» should have at least \emph{some} configuration options, it is not obvious to what extent. It is probably not a good idea to try to cover every edge case, as such a goal could quickly lead the code to become too complex to maintain and expand. We can however make an effort to cover the most common cases, and thus increase the usefulness of the project for most people.
+
+In the next sections I will discuss the configuration options currently available in «json_typegen» and some proposals for future expansions of these options.
+
+\subsection{Visibility}
+
+Perhaps the simplest configuration option in «json_typegen» is type visibility. By default the generated types have no visibility specification. In Rust this means that the types are private, i.e. only accessible from the module\footnote{A file in Rust is itself a module} they are defined in, and any modules it may contain.
+
+Private visibility for types from «json_typegen» was chosen as the default because of the inherent volatility of generating types from external resources and the fact that any change to a public type is considered a breaking API change. Thus, if the types were public by default, any change in an external sample would cause a breaking API change in users crates. If this is what the users desires, they should be free to choose so, but it is not something that should happen by accident.
+
+To set a more public visibility for the generated types, a visibility specifier may be given along with the name for the root type. E.g. ‹json_typegen!("pub Point", ...)› would create the type ‹Point› as a public type, and if the type name ‹"pub(crate) Point"› was given, it would be created as a type visible within the current crate.
+
+\placeholder{field visibility}
+
+\subsection{Derive list}
+
+\subsection{JSON pointers}
+
+\cite{RFC6901}
 
 \placeholder{Configuration/inference hints through JSON pointers}
 
