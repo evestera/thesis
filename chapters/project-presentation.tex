@@ -48,6 +48,8 @@ fn main() {
 
 In listing~\ref{lst:typegenmacro} a minimal example of usage of the procedural macro ‹json_typegen› is shown. This example is provided in the project source as a demo crate, «json_typegen_demo». It is worth noting that the calls to ‹unwrap› unwraps result values assuming success, and will crash the program in the event of a serialization or deserialization failure. In a real world use case we would replace these calls with error handling code.
 
+As can be seen in the example, the procedural macro defines a type -- ‹Point› -- which is then available to be used by the programmer as any other type. The type gives type safe access to its fields, in the example ‹p.x›. Attempts to access an invalid field -- e.g. ‹p.z› -- would be a type error and thus be caught at compile time.
+
 The procedural macro supports inline samples as shown, samples stored as local files and URLs that point to remote samples.
 
 \subsection{Limitations compared to an actual type provider}
@@ -82,21 +84,25 @@ use vector::*;
 \label{lst:hack-workaround}
 \end{listing}
 
-In my testing thus far I have not had a need to work around this limitation, but if necessary the easiest way is to wrap the macro invocation in module scopes, and if desired import the created types. Another workaround is to use «json_typegen_derive» directly. However in the near future\footnote{Tracking issue for procedural macros: \url{https://github.com/rust-lang/rust/issues/38356}} no hack should be needed as all as function-like procedural macros become available on the stable compiler.
+In my testing thus far I have not had a need to work around this limitation, but if necessary the easiest way is to wrap the macro invocation in module scopes, and if desired import the created types. Another workaround is to use «json_typegen_derive» directly. However in the near future\footnote{Tracking issue for procedural macros: \url{https://github.com/rust-lang/rust/issues/38356}} no hack should be needed at all as function-like procedural macros become available on the stable compiler.
 
 \section{The command line interface}
 
+\placeholder{Command line example}
+
 The crate «json_typegen_cli» provides a binary, ‹json_typegen›, which is a command line interface to the same code generation as is used in the procedural macro.
 
+% Diffing of earlier code with new
+
 \section{The web interface}
+
+\placeholder{Screenshot of web interface}
 
 The procedural macro and the command line interface both require the user to download and compile a somewhat significant amount of code. In small projects where the sample can be assumed not to change this initial cost may for a lot of users seem to outweigh the benefits of the code generation.
 
 Both of these kinds of interfaces are also quite bad interface-wise if the user wants to use a large number of configuration options. To counteract both of these problems I have made a web interface as a third way to use access the code generation logic.
 
 The crate «json_typegen_web» provides a binary that both provides a web API for the code generation, as well as hosting the static HTML/JavaScript files providing a frontend to this API.
-
-\placeholder{Demonstrate how CLI or web interface can be used together with proc-macro. Explain how this then gives autocomplete etc.}
 
 \section{Shared code}
 
@@ -109,9 +115,119 @@ As seen in figure~\ref{fig:crates} the macro, web interface and CLI all depend o
   \item Generate Rust code from the type shapes
 \end{enumerate}
 
+As mentioned in section~\ref{sec:macros} procedural macros are $ TokenStream \rightarrow TokenStream $ functions. However a ‹TokenStream› can both be parsed from a string, and written into a string. In other words we have access to both a $ String \rightarrow TokenStream $ and a $ TokenStream \rightarrow String $ function.
+
+The different interfaces we want to provide place some requirements on what signatures we need to be able to use our code with. As mentioned, procedural macros need to have the signature $ TokenStream \rightarrow TokenStream $. A web API on the other hand must at least externally have an interface that boils down to $ String \rightarrow String $. That leaves us with two alternatives, (using $\rightarrow$ for a conversion and $\Rightarrow$ for the transformation):
+
+\begin{align*}
+String \rightarrow TokenStream &\Rightarrow TokenStream \rightarrow String & \text{web} \\
+                   TokenStream &\Rightarrow TokenStream                    & \text{macro} \\
+\\
+                        String &\Rightarrow String                         & \text{web} \\
+TokenStream \rightarrow String &\Rightarrow String \rightarrow TokenStream & \text{macro}
+\end{align*}
+
+In the real project things are a bit more complicated, as more types are involved, but the central point that we can consolidate different interfaces to a shared core that does the actual transformation thanks to conversion methods still stands.
+
+\section{Synergy}
+% Demonstrate how CLI or web interface can be used together with proc-macro. Explain how this then gives autocomplete etc.
+
+Having these different interfaces provides us with some benefits that would be very difficult or impossible to achieve with only a single one.
+
+% migration
+With the three interfaces, there is a clear migration path for most use cases. A user can start with the web interface to test the code generation and see if the results fit their use case. Since it is just a normal website they can do this without having to install anything or add any dependencies.
+
+If the code generation is suitable to their use case, copying and pasting from a website can get tedious. That combined with the additional benefits of the procedural macro will likely lead people to try the procedural macro.
+
+As mentioned in section~\ref{sec:macro-limitations} however, the procedural macro has some limitations, and as mentioned in section~\ref{sec:disadvantages-of-type-providers} even real type providers have their disadvantages. With a combination of the interfaces in this project however, interesting solutions or workarounds for several of these issues are possible.
+
+Perhaps the most obvious concern that is no longer an issue is the fact that it is not possible to see expanded code with the type providers from \fsharpdata\ and the procedural macro in «json_typegen». The two additional interfaces in this project both make it easy to see the generated code.\footnote{On nightly versions of Rust it is in fact also possible to see the resulting code after macro expansion. However, since it is fully expanded it is primarily useful for debugging purposes.}
+% (also mention cargo-expand here)
+
+The two additional interfaces also makes lock-in almost a non-issue. If a user wants to stop using «json_typegen» entirely, they can just generate the code once using either the web or command line interface and replace the macro invocation with the generated code.
+
+% autocomplete by generated code
+One reason why someone might want to not use the procedural macro at the moment is the lack of autocomplete it currently is accompanied by. However, switching from the procedural macro to manually generated code means abandoning the verification against the external resource that the procedural macro gives.
+
+\subsection{Conditional compilation}
+
+% autocomplete by generated code, but keeping benefits
+To make the generated source available to editors while still keeping the benefits of the procedural macro it is possible to use conditional compilation. Listing~\ref{lst:conditional-compilation} shows an example setup where pre-generated code is used in the default build, but the pre-generated code is ignored and the procedural macro used instead when a compilation flag is enabled.
+
+\begin{listing}[ht!]
+\textbf{In the source code:}
+\begin{minted}{rust}
+#[cfg(not(feature = "online-samples"))]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+struct Point {
+    x: i64,
+    y: i64,
+}
+
+#[cfg(feature = "online-samples")]
+json_typegen!("Point", "http://example.com/point.json");
+\end{minted}
+\vspace{5mm}
+
+\textbf{Normal build:}
+\begin{minted}{bash}
+$ cargo build
+\end{minted}
+\vspace{5mm}
+
+\textbf{Type checking against online samples:}
+\begin{minted}{bash}
+$ cargo check --features "online-samples"
+\end{minted}
+\caption{Conditional compilation}
+\label{lst:conditional-compilation}
+\end{listing}
+
+% require network access only for verification
+Using conditional compilation in this way also lets us get around the issue of requiring network access to build. If network access is the only issue we care about we don't even need to pre-generate the code, and can instead use two macro invocations -- one with a local or inline sample and one with the remote one -- as our two options.
+
+% separate build for verification, so "normal" build still reproducible
+Since the normal build in such a setup does not rely on an external resource we also get reproducible builds this way. Even if the external resource changes, it will still be possible to check out an old version of our source code and compile it. This can actually be very useful e.g. for tracking down bugs with tools like ‹git bisect›.
+
 \section{Configurability}
 
-\placeholder{Describe how the goal of configurability differs from \fsharpdata and the consequences of this.}
+There is one final problem that does not just apply to type provider like tools, but to code generation in general: Code generation always has to make some assumptions, and thus do not cover every use case and every requirement a programmer might have.
+
+\begin{listing}[ht!]
+\textbf{Sample:}
+\begin{minted}{json}
+{
+  "registered": "2016-08-19",
+  "..."
+}
+\end{minted}
+\vspace{5mm}
+
+\textbf{Inferred type:}
+\begin{minted}{rust}
+#[derive(...)]
+struct Order {
+    registered: String,
+    ...
+}
+\end{minted}
+\vspace{5mm}
+
+\textbf{Desired type:}
+\begin{minted}{rust}
+#[derive(...)]
+struct Order {
+    registered: Date,
+    ...
+}
+\end{minted}
+\caption{A simple example of how generated code can fall short}
+\label{lst:string-date}
+\end{listing}
+
+It is probably not a good idea to try to cover every edge case, as such a goal could quickly lead the code to become too complex to maintain and expand. We can however make an effort to cover the most common cases, and thus increase the usefulness of the project for most people.
+
+\placeholder{Describe how the goal of configurability differs from \fsharpdata\ and the consequences of this.}
 
 \placeholder{Add/remove derives}
 
@@ -121,6 +237,17 @@ As seen in figure~\ref{fig:crates} the macro, web interface and CLI all depend o
 
 \placeholder{Configuration/inference hints through JSON pointers}
 
-\section{Editor plugins}
+% Problems with adding a lot of configuration in a project with multiple interfaces
+
+\section{Improving the synergy}
+
+While the synergy between the different interfaces is already quite good there are ways in which it could be improved.
+
+% Easy way to transition between interfaces. E.g. copy-paste macro into web interface to see result. Output macro in web interface that is equivalent to the current form input. Etc.
+% Doing this would mean essentially writing a minimal macro parser and generator. I.e.
+% MacroString -> (SampleSource, Config)
+% (SampleSource, Config) -> MacroString
+
+% Have CLI be able to set up conditional compilation. Maybe also web interface?
 
 \placeholder{Describe idea behind \url{https://github.com/evestera/atom-json-typegen} and superficially how it works/can work.}

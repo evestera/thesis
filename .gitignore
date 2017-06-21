@@ -9,6 +9,8 @@ _minted-*/
 *.run.xml
 *.pdf
 *.synctex.gz
+*.synctex.gz(busy)
 *.toc
 *.pyg
 .deploy-*
+tags

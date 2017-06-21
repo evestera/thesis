@@ -27,7 +27,7 @@ struct Person {
 \label{lst:struct}
 \end{listing}
 
-A struct declaration in Rust is a number of fields with types. Rust is not object oriented, and there is no inheritance for structs.
+A struct declaration in Rust is a number of fields with types. Rust is not object oriented, and there is no inheritance for structs. Polymorphism in Rust is instead supported by enumerated types and traits.
 
 \subsection{Enums}
 
@@ -42,7 +42,7 @@ enum Option<T> {
 \label{lst:enum}
 \end{listing}
 
-An enum in Rust is a data type that is one alternative from a number of variants. A declaration of an enum, as seen in listing~\ref{lst:enum} is given as a list of variant names, used as constructors. Each variant can optionally carry some associated data.
+An enum in Rust is a data type that is one alternative from a number of variants, i.e. an enumerated type. A declaration of an enum, as seen in listing~\ref{lst:enum} is given as a list of variant names, used as constructors. Each variant can optionally carry some associated data.
 
 Rust supports pattern matching on enum types, and verifies that any match is exhaustive.
 
@@ -78,6 +78,7 @@ Some traits can be derived -- automatically implemented -- by the compiler. It i
 Listing~\ref{lst:trait} shows a simplified version of the trait ‹Clone›, a struct which automatically derives the trait ‹Debug› and manually implements ‹Clone›.
 
 \subsection{Macros}
+\label{sec:macros}
 
 A macro system is in short a language feature that allows a programmer to write code that does source-to-source transformations. In Rust there are two categories of macros: declarative macros and procedural macros.
 
@@ -107,13 +108,18 @@ Procedural macros are macros where the expansion is done by running a procedure 
   \item Compiling graphics shaders at Rust compile time.\footnote{\url{https://github.com/tomaka/vulkano}}
 \end{itemize}
 
-
+% Possible expansions here:
+% - Current state of macros in Rust. Past, future.
 
 \subsection{Cargo}
 
 While strictly speaking not a part of the Rust programming language, Cargo comes with every normal Rust installation. Cargo is the package manager and build tool for the Rust ecosystem.
 
 For developers from languages with strong tooling support this may not seem like a very big deal. However, for both C and C++ adding a dependency to a project is a major decision due to the burden it places on developers and sometimes even users.
+
+% Possible expansions here:
+% - Example of Cargo.toml and cargo commands
+% - Sentence about crates.io
 
 \section{JSON}
 
@@ -309,13 +315,14 @@ The most significant benefit of type providers is that they enable type safe acc
 
 % Explorative programming / Tooling help
 
-As mentioned, such type safe access can also be achieved by manually writing the custom types, but the ease of use of a type provider makes it very easy to add a new external resource and start experimenting.
+As mentioned, such type safe access can also be achieved by manually writing the custom types, but the ease of use of a type provider makes it very easy to add a new external resource and start experimenting. Not only is the barrier of having to write boilerplate code reduced or removed, but type information gleaned through e.g. autocomplete facilitates exploration of the resource.
 
-When working with external data, the code we write encode our assumptions about the data we are working with. E.g. if I have parsed some data into a variable ‹p› and I write code like ‹let real_name: String = p.name›, the code encodes my assumptions that the data has a field with the name ‹name›, and that said field is a string. If this is the only use of the parsed data \morestuff
+When working with external data, the code we write encode our assumptions about the data we are working with. E.g. if I have parsed some data into a variable ‹p› and I write code like ‹let real_name: String = p.name›, the code encodes my assumptions that the data has a field with the name ‹name›, and that said field is a string. When the types are in sync with the external data the type checking will thus check that our assumptions match the actual structure of the data. Additionally the type checking will \emph{only} check the assumptions we state through our use of the data, which are likely to be the ones we care about.
 
 % Detect API changes
 
 \subsection{Disadvantages of type providers}
+\label{sec:disadvantages-of-type-providers}
 
 While type providers have significant advantages, they also have some disadvantages. Type providers are essentially a code generation tool. However, type providers do not give the user access to the generated code. In part this is because some type providers for F\# generate erased types which are not really representable by the normal code of F\#. Some type providers also generate types on demand, because the accessed data is too large to represent or otherwise impractical to generate all at once.
 
@@ -329,6 +336,7 @@ No access to the generated code also causes a certain amount of lock-in. Without
 
 % Network access
 
-A completely different issue with certain type providers is that they provide the greatest benefit with concern to the type checking when verifying the use of an external resource. However if access to this external resource requires network access, this causes the compilation of the program to require network access for every build. \morestuff
+A completely different issue with certain type providers is that they provide the greatest benefit with concern to the type checking when verifying the use of an external resource. However if access to this external resource requires network access, this causes the compilation of the program to require network access for every build. Sometimes requiring network access to build is not a big concern, but other times it can be a big concern, or even completely out of the question.
 
 % Build can break without code changes
+Another concern many people have with type providers is that since the type checking checks if the code matches the data, the build can break if the structure of the data changes. In other words, the advantage of having our assumptions checked by the type checking also means that the build can break without any code changes. This runs contrary to the concept of reproducible builds which is a very common goal for build systems. One may counter that an external data source like an API is part of the system when it is used in a program, and as such a build failure is the correct behavior, but it is nevertheless a contentious issue.
