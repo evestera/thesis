@@ -10,9 +10,12 @@ _minted-*/
 *.out
 *.run.xml
 *.pdf
+*.ps
 *.synctex.gz
 *.synctex.gz(busy)
 *.toc
 *.pyg
+*.fls
+*.fdb_latexmk
 .deploy-*
 tags
