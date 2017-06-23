@@ -47,6 +47,11 @@ An enum in Rust is a data type that is one alternative from a number of variants
 Rust supports pattern matching on enum types, and verifies that any match is exhaustive.
 
 \subsection{Traits}
+\label{sec:traits}
+
+A trait specifies methods that a type needs to provide to implement the trait.
+
+Some traits can be derived -- automatically implemented -- by the compiler. This is done by annotating the type with a ‹derive› attribute with a list of the traits to derive implementations for.
 
 \begin{listing}[ht!]
 \begin{minted}{rust}
@@ -71,11 +76,9 @@ impl Clone for Bag {
 \label{lst:trait}
 \end{listing}
 
-A trait specifies methods that a type needs to provide to implement the trait.
+Listing~\ref{lst:trait} shows a simplified version of the trait ‹Clone›, a struct which automatically derives the trait ‹Debug› -- with the annotation ‹derive(Debug)› -- and manually implements ‹Clone› with an ‹impl Clone› block.
 
-Some traits can be derived -- automatically implemented -- by the compiler. It is also possible to write libraries for deriving custom traits. Deriving a trait usually requires that the constituent types also implements the trait. E.g. to derive ‹Clone› for ‹Ty› you need to be able to clone all parts of ‹Ty›.
-
-Listing~\ref{lst:trait} shows a simplified version of the trait ‹Clone›, a struct which automatically derives the trait ‹Debug› and manually implements ‹Clone›.
+It is also possible to write libraries for deriving custom traits. Deriving a trait usually requires that the constituent types also implements the trait. E.g. to derive ‹Clone› for ‹Ty› you need to be able to clone all parts of ‹Ty›.
 
 \subsection{Macros}
 \label{sec:macros}
@@ -122,16 +125,22 @@ For developers from languages with strong tooling support this may not seem like
 % - Sentence about crates.io
 
 \section{JSON}
+\label{sec:json}
 
 JSON is a text based data format for structured data. It is very commonly used as a data interchange format in modern HTTP-based architectures. JSON was originally based on a subset of the JavaScript programming language, but is designed to be language-independent and is now used in interaction between applications written in practically all programming languages.
 
-The format as described by the two official JSON specifications -- IETF RFC 7159\cite{RFC7159} and ECMA 404\cite{ECMA404} -- is very simple.
-
-JSON values can only be an object, array, number or string, or the literals ‹true›, ‹false› or ‹null›.
+The format as described by the two official JSON specifications -- IETF RFC 7159\cite{RFC7159} and ECMA 404\cite{ECMA404} -- is very simple. JSON values can only be an object, array, number or string, or the literals ‹true›, ‹false› or ‹null›.
+% contrast simplicity to XML?
 
 A JSON object is an unordered collection of mappings from keys (that are JSON strings) to JSON values. As this closely corresponds to what is usually referred to as a map, or a dictionary in most programming languages, the term object may seem like a bit of a misnomer here, arising from JSONs background as a subset of JavaScript.
 
 A JSON array is an ordered collection of JSON values. It is worth noting that JSON places no restriction on the types of the values of the array, and as such it can sometimes be a heterogenous collection.
+
+% A JSON number...
+
+% A JSON string...
+
+% Everything is "nullable"
 
 \begin{listing}[ht!]
 \begin{minted}{json}
