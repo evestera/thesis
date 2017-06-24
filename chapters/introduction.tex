@@ -306,7 +306,7 @@ type Simple = JsonProvider<""" { "name":"John", "age":94 } """>
 [<EntryPoint>]
 let main argv =
     let simple = Simple.Parse(""" { "name":"Tomas", "age":4 } """)
-    printfn "%d %s" simple.Age simple.Name
+    printfn "%s %d" simple.Name simple.Age
     // prints "Tomas 4"
     0
 \end{minted}

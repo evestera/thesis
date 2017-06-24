@@ -117,3 +117,24 @@ should be equivalent to
 detecting identical shapes:
 only need to check types at same nesting level. i.e. object containing object (nest 1) can't have same shape as object not containing object (nest 0)
 since JSON is purely hierarchical every object will have well defined nesting level
+
+The first two steps in the "general data flow" is not explained anywhere:
+- Get the actual JSON text for the sample.
+- Parse the JSON text into JSON values
+
+In inference:
+use_type (e.g. map)
+pattern_type (opaque type in shape system?, attach additional options at inference time)
+
+Intermediary passes:
+type_name
+same_as
+
+In codegen:
+use_type
+deserialize_with
+
+
+Transform list of JSON pointer options to tree.
+Each node in this tree has a value as well as a map of children.
+If wildcards are supported each node also has a wildcard "child".

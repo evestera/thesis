@@ -88,7 +88,30 @@ In my testing thus far I have not had a need to work around this limitation, but
 
 \section{The command line interface}
 
-\placeholder{Command line example}
+\begin{listing}[ht!]
+\textbf{Invocation of procedural macro:}
+\begin{minted}{rust}
+json_typegen!("Point", r#"{ "x": 1, "y": 2 }"#);
+\end{minted}
+\vspace{5mm}
+
+\textbf{Execution of binary:}
+\begin{minted}{shell}
+json_typegen -n Point '{ "x": 1, "y": 2 }'
+\end{minted}
+\vspace{5mm}
+
+\textbf{Output from either:}
+\begin{minted}{rust}
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+struct Point {
+    x: i64,
+    y: i64,
+}
+\end{minted}
+\caption{Equivalent uses of CLI and macro}
+\label{lst:cli-and-macro}
+\end{listing}
 
 The crate «json_typegen_cli» provides a binary, ‹json_typegen›, which is a command line interface to the same code generation as is used in the procedural macro. In other words would running the binary ‹json_typegen› and invoking the macro ‹json_typegen› output the same code if given the same input sample and options.
 
@@ -106,7 +129,7 @@ The crate «json_typegen_web» provides a binary that both provides a web API fo
 
 \section{Shared code}
 
-As seen in figure~\ref{fig:crates} the macro, web interface and CLI all depend on a common crate, «json_typegen_shared». This crate contains the actual inference and code generation logic. The following data flow is common to all three interfaces:
+As seen in figure~\ref{fig:crates} the macro, web interface and CLI all depend on a common crate, «json_typegen_shared». This crate contains the actual inference and code generation logic. The following general data flow is common to all three interfaces:
 
 \begin{enumerate}
   \item Get the actual JSON text for the sample.
@@ -114,6 +137,8 @@ As seen in figure~\ref{fig:crates} the macro, web interface and CLI all depend o
   \item Infer type shapes from the JSON values
   \item Generate Rust code from the type shapes
 \end{enumerate}
+
+In the CLI and the web interface there is additionally a phase of formatting the generated code before the code is output to the user.
 
 As mentioned in section~\ref{sec:macros} procedural macros are $ TokenStream \rightarrow TokenStream $ functions. However a ‹TokenStream› can both be parsed from a string, and written into a string. In other words we have access to both a $ String \rightarrow TokenStream $ and a $ TokenStream \rightarrow String $ function.
 
@@ -266,7 +291,28 @@ By default «json_typegen» annotates each generated type with the following der
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 \end{minted}
 
-\morestuff
+This list can be overridden with the ‹derives› option. None of the traits are mandatory, but a generated type with an empty derive list would be close to useless. Since each trait has a significant effect we will look at each of the default derived traits separately. Additionally we will look at some additional traits that can be derived that a user might want to add for different use cases.
+
+\subsubsection{Serialize, Deserialize}
+
+‹Serialize› and ‹Deserialize›
+
+\subsubsection{Default}
+
+\subsubsection{Debug}
+
+\subsubsection{Clone}
+
+\subsubsection{Eq, PartialEq}
+
+\subsubsection{Ord, PartialOrd}
+
+\subsubsection{Hash}
+
+\subsubsection{Frunk: LabelledGeneric}
+
+\subsubsection{New}
+
 
 \subsection{JSON pointers}
 
