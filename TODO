@@ -1,20 +1,8 @@
-Pros/Cons of type providers
-  Pros:
-  - Type checking
-  - Tooling help
-  - Detect API changes
-  Cons:
-  - Network access
-  - Additional compile time
-  - Build can break without code changes
-
 Proof that we can derive traits that apply to base types. Use Default as example.
 
 Shape inference
 - Basic details
 - Explain any changes from F# Data
-
-Show conditional compilation and synergy from having 3 interfaces.
 
 Mention other type-provider-like things in Rust
 diesel
@@ -55,6 +43,10 @@ Inference hints using JSON pointers?
 "/*/type" "enum" (or "tag")
 "/foo/bar" "(int, string)"
 "/foo/bar" "tuple"
+
+Wildcard adds some complexities. Bare JSON pointer has some nice properties that are destroyed:
+- String equality => pointer equality
+- Value::pointer can only have one result
 
 {
   "top_left": { "x": 4, "y": 5 },
@@ -101,8 +93,27 @@ notify on changes (though a git diff would do the same thing)
 
 use CARGO_MANIFEST_DIR to find local files
 
+Mention that is possible to see documentation for generated code.
+Generate additional documentation for generated types. Configurable what kind of information.
 
-Easy way to transition between interfaces. E.g. copy-paste macro into web interface to see result. Output macro in web interface that is equivalent to the current form input. Etc.
-Doing this would mean essentially writing a minimal macro parser and generator. I.e.
-MacroString -> (SampleSource, Config)
-(SampleSource, Config) -> MacroString
+Enable logging of inference information.
+
+Look at possibility of generating types for no-std projects
+(serde supports no-std, but seems like serde_json does not...)
+
+Wrapper types w/Deref<Target=Vec<Value>> for heterogenous lists
+Maybe custom enum types
+i.e. mixed.numbers() returns Iter<f64>, mixed.strings() returns Iter<
+
+"/A" same_as "/B" can be applied between inference and generation
+retrieve shape for A, shape for B, unify, put result back. shape should have some kind of typeId if identical shapes are not already detected
+
+"/A" type_name "Foo"
+"/B" type_name "Foo"
+should be equivalent to
+"/A" same_as "/B"
+"/B" type_name "Foo"
+
+detecting identical shapes:
+only need to check types at same nesting level. i.e. object containing object (nest 1) can't have same shape as object not containing object (nest 0)
+since JSON is purely hierarchical every object will have well defined nesting level

@@ -4,7 +4,7 @@
 
 Type providers have significant benefits that are worth exploring in other programming languages. I have created a project that aims to approximate the benefits of type providers in Rust.
 
-The project is divided into five crates\footnote{A crate is the equivalent of a library or a package in Cargo, Rust's package manager}, as well as a crate demonstrating the use of the main crate. Most important of these are one library -- a procedural macro -- and two binaries -- a command line interface and a web interface. Figure~\ref{fig:crates} shows how the crates depend on each other.
+The project is divided into five crates, as well as a crate demonstrating the use of the main crate. Most important of these are one library -- a procedural macro -- and two binaries -- a command line interface and a web interface. Figure~\ref{fig:crates} shows how the crates depend on each other.
 
 \begin{figure}[ht!]
 \centering
@@ -90,7 +90,7 @@ In my testing thus far I have not had a need to work around this limitation, but
 
 \placeholder{Command line example}
 
-The crate «json_typegen_cli» provides a binary, ‹json_typegen›, which is a command line interface to the same code generation as is used in the procedural macro.
+The crate «json_typegen_cli» provides a binary, ‹json_typegen›, which is a command line interface to the same code generation as is used in the procedural macro. In other words would running the binary ‹json_typegen› and invoking the macro ‹json_typegen› output the same code if given the same input sample and options.
 
 % Diffing of earlier code with new
 
@@ -98,9 +98,9 @@ The crate «json_typegen_cli» provides a binary, ‹json_typegen›, which is a
 
 \placeholder{Screenshot of web interface}
 
-The procedural macro and the command line interface both require the user to download and compile a somewhat significant amount of code. In small projects where the sample can be assumed not to change this initial cost may for a lot of users seem to outweigh the benefits of the code generation.
+The procedural macro and the command line interface both require the user to download and compile a somewhat significant amount of code. In small projects where the sample can be assumed not to change, this initial cost may for a lot of users seem to outweigh the benefits of the code generation.
 
-Both of these kinds of interfaces are also quite bad interface-wise if the user wants to use a large number of configuration options. To counteract both of these problems I have made a web interface as a third way to use access the code generation logic.
+Both of these kinds of interfaces also have a somewhat suboptimal user experience if the user wants to use a large number of configuration options. To counteract both of these problems I have made a web interface as a third way to use access the code generation logic.
 
 The crate «json_typegen_web» provides a binary that both provides a web API for the code generation, as well as hosting the static HTML/JavaScript files providing a frontend to this API.
 
@@ -134,22 +134,27 @@ In the real project things are a bit more complicated, as more types are involve
 
 Having these different interfaces provides us with some benefits that would be very difficult or impossible to achieve with only a single one.
 
-% migration
 With the three interfaces, there is a clear migration path for most use cases. A user can start with the web interface to test the code generation and see if the results fit their use case. Since it is just a normal website they can do this without having to install anything or add any dependencies.
 
 If the code generation is suitable to their use case, copying and pasting from a website can get tedious. That combined with the additional benefits of the procedural macro will likely lead people to try the procedural macro.
 
-As mentioned in section~\ref{sec:macro-limitations} however, the procedural macro has some limitations, and as mentioned in section~\ref{sec:disadvantages-of-type-providers} even real type providers have their disadvantages. With a combination of the interfaces in this project however, interesting solutions or workarounds for several of these issues are possible.
+As mentioned in section~\ref{sec:macro-limitations}, the procedural macro has some limitations, and as mentioned in section~\ref{sec:disadvantages-of-type-providers} even real type providers have their disadvantages. With a combination of the interfaces in this project, interesting solutions or workarounds for several of these issues are possible.
 
-Perhaps the most obvious concern that is no longer an issue is the fact that it is not possible to see expanded code with the type providers from \fsharpdata\ and the procedural macro in «json_typegen». The two additional interfaces in this project both make it easy to see the generated code.\footnote{On nightly versions of Rust it is in fact also possible to see the resulting code after macro expansion. However, since it is fully expanded it is primarily useful for debugging purposes.}
+% FIXME: Unreadable sentence
+Perhaps the most obvious concern that is no longer an issue is the fact that it is not possible to see expanded code with the type providers from \fsharpdata\ and the procedural macro in «json_typegen».
+The two additional interfaces in this project both make it easy to see the generated code.\footnote{On nightly versions of Rust it is in fact also possible to see the resulting code after macro expansion. However, since it is fully expanded it is primarily useful for debugging purposes.}
 % (also mention cargo-expand here)
 
-The two additional interfaces also makes lock-in almost a non-issue. If a user wants to stop using «json_typegen» entirely, they can just generate the code once using either the web or command line interface and replace the macro invocation with the generated code.
+The two additional interfaces also makes lock-in almost a non-issue. If a user wants to stop using «json_typegen» entirely, they can just do a final one time generation of the code. They can do this using either the web or command line interface, and replace the macro invocation with the generated code.
 
 % autocomplete by generated code
-One reason why someone might want to not use the procedural macro at the moment is the lack of autocomplete it currently is accompanied by. However, switching from the procedural macro to manually generated code means abandoning the verification against the external resource that the procedural macro gives.
+One reason why someone might not want to use the procedural macro at the moment is the current lack of autocomplete. However, switching from the procedural macro to manually generated code means abandoning the verification against the external resource that the procedural macro gives.
 
 \subsection{Conditional compilation}
+
+% In Rust you can do conditional compilation by...
+% #[cfg(feature = "online-samples")]
+% Conditional compilation means that...
 
 % autocomplete by generated code, but keeping benefits
 To make the generated source available to editors while still keeping the benefits of the procedural macro it is possible to use conditional compilation. Listing~\ref{lst:conditional-compilation} shows an example setup where pre-generated code is used in the default build, but the pre-generated code is ignored and the procedural macro used instead when a compilation flag is enabled.

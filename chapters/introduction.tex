@@ -86,16 +86,19 @@ It is also possible to write libraries for deriving custom traits. Deriving a tr
 A macro system is in short a language feature that allows a programmer to write code that does source-to-source transformations. In Rust there are two categories of macros: declarative macros and procedural macros.
 
 \begin{listing}[ht!]
+\textbf{Macro declaration:}
 \begin{minted}{rust}
-// declaration:
 macro_rules! double {
     ($e: expr) => ({
         let temp = $e;
         temp + temp
     })
 }
+\end{minted}
+\vspace{5mm}
 
-// usage:
+\textbf{Macro usage:}
+\begin{minted}{rust}
 let ten = double!(2 + 3);
 \end{minted}
 \caption{A simple declarative macro in Rust}
@@ -119,6 +122,9 @@ Procedural macros are macros where the expansion is done by running a procedure 
 While strictly speaking not a part of the Rust programming language, Cargo comes with every normal Rust installation. Cargo is the package manager and build tool for the Rust ecosystem.
 
 For developers from languages with strong tooling support this may not seem like a very big deal. However, for both C and C++ adding a dependency to a project is a major decision due to the burden it places on developers and sometimes even users.
+
+% explain crates here
+% \footnote{A crate is the equivalent of a library or a package in Cargo, Rust's package manager}
 
 % Possible expansions here:
 % - Example of Cargo.toml and cargo commands
