@@ -1,22 +1,27 @@
 %!TEX root = ../main.tex
 
 \chapter{Code generation}
+\label{sec:code-generation}
 
-The code generation in «json_typegen» is divided in three main stages.
+Once a JSON sample has been retrieved and parsed using «serde_json» into the catchall type ‹serde_json::Value›, «json_typegen» is ready to begin inference and code generation. In this chapter we will look at the details of these three stages:
 
 \begin{itemize}
-  \item First the a generalized \say{shape} is inferred from the JSON values.
+  \item First a generalized \say{shape} is inferred from the JSON values.
   \item Then this inference is enhanced in intermediary passes.
   \item Finally Rust code is generated based on the inferred shapes.
 \end{itemize}
 
-In this chapter I will first present the basic version of the inference algorithm and code generation, before looking at how this basic system can be extended in various ways.
+First I will present the basic version of the inference algorithm and code generation, before looking at how this basic system can be extended in various ways.
 
 \section{Shape inference}
 
-The shape inference is based on the algorithms used in \fsharpdata\ as presented in the paper \emph{Types from Data: Making Structured Data First-class Citizens in F\#}\cite{fsharp-types-from-data}.
+The shape inference is based on the algorithms used in \fsharpdata\ as presented in the paper \emph{Types from Data: Making Structured Data First-class Citizens in F\#}\cite{fsharp-types-from-data}. As done in this paper I will use the term shape for the intermediate representation of the inference data, to avoid confusion with actual programming language types.
+
+% Describe how shapes and types differ
 
 The basic algorithm has two main functions, $\shap$ and $\csh$.
+
+$\shap$, shown in figure~\ref{fig:shap} takes as its input the parsed ‹serde_json::Value› and produces a shape.
 
 \begin{figure}[ht!]
 \begin{align*}
@@ -44,15 +49,21 @@ The basic algorithm has two main functions, $\shap$ and $\csh$.
 \csh([\ ], [a])          &= [a]              & (empty) \\
 \csh([a], [b])           &= [\csh(a, b)]     & (arr) \\
 \csh(a = \{ \cdots \}, b = \{ \cdots \}) &= \cfs(a, b) & (obj) \\
-\csh(a, b)               &= ‹any›            & (any) \\
-\\
+\csh(a, b)               &= ‹any›            & (any)
+\end{align*}
+\caption{$\csh$, the common shape function}
+\label{fig:csh}
+\end{figure}
+
+\begin{figure}[ht!]
+\begin{align*}
 \opt(‹null›) &= ‹null› \\
 \opt(‹any›)  &= ‹any› \\
 \opt(‹optional(›a‹)›) &= ‹optional(›a‹)› \\
 \opt(a) &= ‹optional(›a‹)›
 \end{align*}
-\caption{$\csh$, the common shape function}
-\label{fig:csh}
+\caption{$\opt$, the function ensuring optionality/nullability of shapes}
+\label{fig:opt}
 \end{figure}
 
 \begin{figure}[ht!]
