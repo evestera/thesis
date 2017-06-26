@@ -317,7 +317,7 @@ This list can be overridden with the ‹derives› option. None of the traits ar
 
 Any unused traits and the accompanying code is eliminated by optimization for release builds, and so do not contribute anything to binary size. The added code generation of unused traits added very slightly to compile time in my testing, but not enough so as to be noticeable.
 
-Since the cost for additional derived traits is so small, all the traits that are implemented for our base types\footnote{As a reminder, our base types are ‹Vec<T>›, ‹Option<T>› ‹i64›, ‹f64›, ‹String›, ‹bool› and ‹serde_json::Value›} are in our default list.
+Since the cost for additional derived traits is so small, all the traits that are implemented for our base types\footnote{As a reminder, our base types are ‹Vec<T>›, ‹Option<T>› ‹i64›, ‹f64›, ‹String›, ‹bool› and ‹serde_json::Value›, hereafter referred to as ‹JsonVal›} are in our default list.
 
 \subsubsection{Serialize, Deserialize}
 
@@ -339,20 +339,21 @@ The ‹Clone› trait makes it possible to make a copy of an instance of the typ
 
 ‹Eq› and ‹PartialEq› implements methods for comparisons that are, respectively, full and partial equivalence relations. Implementing ‹PartialEq› makes it possible to use the ‹==› and ‹!=› operators. ‹Eq› provides no additional functionality, and is just a marker trait declaring the relation to be a full equivalence relation.
 
-‹PartialEq› is implemented for all of our base types, and is as such included in the default derive list. ‹Eq› on the other hand is not implemented for ‹f64›, floating point numbers, and ‹serde_json::Value›, as they themselves can contain floating point numbers.
+‹PartialEq› is implemented for all of our base types, and is as such included in the default derive list. ‹Eq› on the other hand is not implemented for ‹f64›, floating point numbers, and ‹JsonVal›, as they themselves can contain floating point numbers.
 
 ‹f64› does not implement ‹Eq› because one of the requirements of a full equivalence relation is that it is reflexive, i.e. that every value is equal to itself. The possibility of ‹NaN› values makes ‹f64› not satisfy this property, as ‹NaN != NaN›.
-% Eq missing for f64 and ‹serde_json::Value›
-% JSON numbers can actually not be Infinite or NaN, so if it was possible to make types immutable we could safely mark types as Eq
-% Users can derive Eq when they have no floats and no Any types
+
+While ‹f64› should not be ‹Eq›, JSON numbers are actually not allowed to be NaN or Infinity according to RFC 7159\cite[7]{RFC7159}. This means that if we could guarantee that only values from JSON data is stored in any fields that are inferred as ‹f64› we could safely make them ‹Eq›. Unfortunately, this is not something we can guarantee in Rust as immutability is a property of variable bindings, and not on fields.
+
+‹JsonVal› actually enforces that its numbers don't contain ‹Infinite› or ‹NaN› and thus \emph{could} be ‹Eq›.
+
+Users that know they won't have any floats or inference issues that leads to ‹JsonVal› values can add ‹Eq› to the derive list. If they have floats or ‹JsonVal› values, but are sure that any floats will come from JSON, an ‹Eq› implementation can be manually added with a ‹impl Eq for TheType {}› for each generated type. If this is something many people would do, generating these lines is something that could somewhat easily be added to «json_typegen».
 
 \subsubsection{Hash}
 
-% Hash missing for f64 and ‹serde_json::Value›
+Like with ‹Eq›, ‹Hash› is implemented for all of our base types except ‹f64› and ‹JsonVal›. The problem here again is ‹NaN›, but it is not as clear cut as with ‹Eq›. There are several reasonable, but no perfect solution to how floats should be hashable, so the Rust standard library provides no ‹Hash› implementation for ‹f64›. Unfortunately this leaves us with users only being able to add ‹Hash› to the derive list when they have no floats or ‹JsonVal› values.
 
-% from std::hash::Hash docs:
-% When implementing both Hash and Eq, it is important that the following property holds:
-% k1 == k2 -> hash(k1) == hash(k2)
+This lack of ‹Hash› and ‹Eq› means that types generated with the default configuration can not be entered into any ‹HashSet› and can not be used in keys in a ‹HashMap›.
 
 \subsubsection{Ord, PartialOrd}
 
