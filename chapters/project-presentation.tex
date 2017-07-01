@@ -7,6 +7,7 @@ Type providers have significant benefits that are worth exploring in other progr
 The project is divided into five crates, as well as a crate demonstrating the use of the main crate. Most important of these are one library -- a procedural macro -- and two binaries -- a command line interface and a web interface. Figure~\ref{fig:crates} shows how the crates depend on each other.
 
 \begin{figure}[ht!]
+\vspace{2mm}
 \centering
 \begin{tikzpicture}[>=stealth, thick, shorten >=1pt]
 \graph [layered layout, grow=up, level distance=1.3cm, nodes={draw, rectangle, rounded corners}] {
@@ -17,6 +18,7 @@ The project is divided into five crates, as well as a crate demonstrating the us
 "json\_typegen\_web" ->[shorten >=6pt] "json\_typegen\_shared";
 };
 \end{tikzpicture}
+\vspace{2mm}
 \caption{Internal dependencies in the project}
 \label{fig:crates}
 \end{figure}
@@ -141,7 +143,12 @@ The crate «json_typegen_cli» provides a binary, ‹json_typegen›, which is a
 
 \section{The web interface}
 
-\placeholder{Screenshot of web interface}
+\begin{figure}[ht!]
+\includegraphics[width=\textwidth]{json_typegen_web}
+\hspace*{-1.5in} % To get rid of some weird bottom margin
+\caption{Screenshot of the web interface}
+\label{fig:web-screenshot}
+\end{figure}
 
 The procedural macro and the command line interface both require the user to download and compile a somewhat significant amount of code. In small projects where the sample can be assumed not to change, this initial cost may for a lot of users seem to outweigh the benefits of the code generation.
 
@@ -351,7 +358,7 @@ Users that know they won't have any floats or inference issues that leads to ‹
 
 \subsubsection{Hash}
 
-Like with ‹Eq›, ‹Hash› is implemented for all of our base types except ‹f64› and ‹JsonVal›. The problem here again is ‹NaN›, but it is not as clear cut as with ‹Eq›. There are several reasonable, but no perfect solution to how floats should be hashable, so the Rust standard library provides no ‹Hash› implementation for ‹f64›. Unfortunately this leaves us with users only being able to add ‹Hash› to the derive list when they have no floats or ‹JsonVal› values.
+Like with ‹Eq›, ‹Hash› is implemented for all of our base types except ‹f64› and ‹JsonVal›. The problem here again is ‹NaN›, but it is not as clear cut as with ‹Eq›. There are several reasonable, but no perfect solution to how floats should be hashable, so the Rust standard library provides no ‹Hash› implementation for ‹f64›. Unfortunately this leaves us with users only being able to add ‹Hash› to the derive list when they have no floats or ‹JsonVal› values (or implementing ‹Hash› manually).
 
 This lack of ‹Hash› and ‹Eq› means that types generated with the default configuration can not be entered into any ‹HashSet› and can not be used in keys in a ‹HashMap›.
 
@@ -359,12 +366,22 @@ This lack of ‹Hash› and ‹Eq› means that types generated with the default
 
 % PartialOrd missing for ‹serde_json::Value›
 
-\subsubsection{Frunk: Generic, LabelledGeneric}
-
 \subsubsection{New}
 
+In addition to the derives provided the standard library and «serde»  (which we already assume as a peer dependency) there are other custom derive libraries that can be used to add functionality to the generated types from «json_typegen». One simple such example is the «derive-new» crate, which derives a ‹new› constructor for the type with all fields as arguments. To add this functionality to all the generated types, all a user of «json_typegen» has to do is to add «derive-new» as a dependency, and add ‹New› to the derive list.
+
+\subsubsection{Frunk: Generic, LabelledGeneric}
+
+I won't go into detail on all the different functionality that can be added by custom derives, but one library that is of particular interest to us is «frunk». «frunk» is a library for doing functional generic programming in Rust. Among the things that it provides are two traits and accompanying derives: ‹Generic› and ‹LabelledGeneric›.
+
+% FIXME: Add nominal/structural typing to the introduction
+
+As explained in section~\ref{sec:rust-intro} Rust is nominally typed. This means that if we create types that have the same shape, but different names, they can not be used in place of each other, and converting between them is not all that easy. While we will look at other ways around this issue as well, ‹Generic› and ‹LabelledGeneric› provide a way to get a semblance of structural typing in Rust.
+
+Types that implement ‹Generic› can be converted between each other if they are structurally the same, i.e. if the types have the same number of fields, with the same types, in the same order. ‹LabelledGeneric› will additionally require the fields to have the same names to allow the conversion.
 
 \subsection{JSON pointers}
+\label{sec:json-pointers}
 
 While some configuration options like type visibility and the derive list make sense to specify globally, for the whole JSON document at once, a lot of what would be beneficial to configure has to be done on a much more granular level.
 
