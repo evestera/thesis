@@ -33,7 +33,45 @@
 \usepackage{tikz}
 \usetikzlibrary{graphs}
 \usetikzlibrary{graphdrawing}
+\usetikzlibrary{arrows, automata}
 \usegdlibrary{layered}
+
+
+% Double brackets and braces for shapes:
+% \vect{ expr }
+% \recd{ expr }
+
+\usepackage{stmaryrd}
+
+\newcommand\vect[1]{\llbracket #1 \rrbracket}
+
+\usepackage{xparse}
+
+% Based on:
+% https://tex.stackexchange.com/questions/252648/left-right-double-curly-brace-blackboard-bold-symbol
+\NewDocumentCommand{\recd}{sO{}m}{%
+  \IfBooleanTF{#1}
+    {\recdext{#3}}
+    {\recdx[#2]{#3}}%
+}
+
+\NewDocumentCommand{\recdext}{m}{%
+  \sbox0{%
+    \mathsurround=0pt % just for safety
+    $\left\{\vphantom{#1}\right.\kern-\nulldelimiterspace$%
+  }%
+  \sbox2{\{}%
+  \left\{\kern-.7\wd0\left\{#1\right\}\kern-.7\wd0\right\}%
+}
+
+\NewDocumentCommand{\recdx}{om}{%
+  \sbox0{\mathsurround=0pt$#1\{$}%
+  \sbox2{\{}%
+    \mathopen{#1\{\kern-.7\wd0 #1\{}
+    #2
+    \mathclose{#1\}\kern-.7\wd0 #1\}}
+}
+
 
 \usepackage{minted}
 \newmintinline[ir]{rust}{}
@@ -83,7 +121,8 @@
   maxbibnames=6,
   isbn=false,
   %url=false,
-  doi=false
+  doi=false,
+  defernumbers=true
 ]{biblatex}
 \addbibresource{refs.bib}
 \setlength\bibitemsep{\baselineskip}
@@ -112,6 +151,13 @@
 \input{chapters/code-generation.tex}
 \input{chapters/future-work.tex}
 
-\printbibliography
+\nocite{serde}
+\nocite{serdejson}
+\nocite{frunk}
+\nocite{fsharpdata}
+
+\printbibheading
+\printbibliography[keyword=software, heading=subbibliography, title={Referenced software projects}]
+\printbibliography[notkeyword=software, heading=subbibliography, title={Other references}]
 
 \end{document}
