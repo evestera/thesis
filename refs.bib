@@ -1,7 +1,12 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Articles etc.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 @inproceedings{fsharp-types-from-data,
   author    = {Petricek, Tomas and Guerra, Gustavo and Syme, Don},
   title     = {Types from Data: Making Structured Data First-class Citizens in F\#},
   booktitle = {Proceedings of the 37th ACM SIGPLAN Conference on Programming Language Design and Implementation},
+  pages     = {477--490},
   series    = {PLDI '16},
   date      = {2016},
   publisher = {ACM},
@@ -10,26 +15,21 @@
   doi       = {10.1145/2908080.2908115},
   isbn      = {978-1-4503-4261-2},
   keywords  = {F\#,Inference,JSON,Type Providers,XML},
-  pages     = {477--490},
 }
 
 @article{row-types,
- author = {Wand, Mitchell},
- title = {Type Inference for Record Concatenation and Multiple Inheritance},
- journal = {Inf. Comput.},
- issue_date = {July 1991},
- volume = {93},
- number = {1},
- month = jul,
- year = {1991},
- issn = {0890-5401},
- pages = {1--15},
- numpages = {15},
- url = {http://dx.doi.org/10.1016/0890-5401(91)90050-C},
- doi = {10.1016/0890-5401(91)90050-C},
- acmid = {116982},
- publisher = {Academic Press, Inc.},
- address = {Duluth, MN, USA},
+  author       = {Wand, Mitchell},
+  title        = {Type Inference for Record Concatenation and Multiple Inheritance},
+  pages        = {1--15},
+  date         = {1991-07},
+  publisher    = {Academic Press, Inc.},
+  location     = {Duluth, MN, USA},
+  url          = {http://dx.doi.org/10.1016/0890-5401(91)90050-C},
+  doi          = {10.1016/0890-5401(91)90050-C},
+  issn         = {0890-5401},
+  journaltitle = {Inf. Comput.},
+  volume       = {93},
+  number       = {1},
 }
 
 @report{fsharp-strongly-typed-language-support,
@@ -70,6 +70,21 @@
   keywords  = {dependent types,generic programming,metaprogramming,type providers},
   pages     = {25--34},
 }
+
+@article{fold-tutorial,
+  author       = {Hutton, Graham},
+  title        = {A tutorial on the universality and expressiveness of fold},
+  pages        = {355--372},
+  date         = {1999},
+  publisher    = {Cambridge University Press},
+  journaltitle = {Journal of Functional Programming},
+  volume       = {9},
+  number       = {4},
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Specifications
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 @report{ECMA404,
   title       = {{The JSON Data Interchange Format}},
@@ -145,74 +160,81 @@
   issn         = {2070-1721},
 }
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Rust documents
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 @online{rust-std-docs,
-  author = {Rust Community},
-  title = {Rust standard library API documentation},
-  year = 2017,
-  url = {https://doc.rust-lang.org/std/},
+  author  = {The Rust Project Developers},
+  title   = {Rust standard library API documentation},
+  year    = 2017,
+  url     = {https://doc.rust-lang.org/std/},
   urldate = {2017-06-26}
 }
 
 @online{rust-book-1e,
-  author = {Rust Community},
-  title = {The Rust Programming Language - First Edition},
-  year = 2017,
-  url = {https://doc.rust-lang.org/book/first-edition/},
+  author  = {Klabnik, Steve and Nichols, Carol and others},
+  title   = {The Rust Programming Language - First Edition},
+  year    = 2017,
+  url     = {https://doc.rust-lang.org/book/first-edition/},
   urldate = {2017-06-26}
 }
 
 @book{rust-book-2e,
-  author = {Rust Community},
-  title = {The Rust Programming Language - Second Edition},
-  year = 2017,
+  author    = {Klabnik, Steve and Nichols, Carol and others},
+  title     = {The Rust Programming Language - Second Edition},
+  year      = 2017,
   publisher = {No Starch Press},
-  url = {https://doc.rust-lang.org/book/second-edition/},
-  urldate = {2017-06-26}
+  url       = {https://doc.rust-lang.org/book/second-edition/},
+  urldate   = {2017-06-26}
 }
 
 @online{rust-reference,
-  author = {Rust Community},
-  title = {The Rust Reference},
-  year = 2017,
-  url = {https://doc.rust-lang.org/reference/},
+  author  = {The Rust Project Developers},
+  title   = {The Rust Reference},
+  year    = 2017,
+  url     = {https://doc.rust-lang.org/reference/},
   urldate = {2017-06-26}
 }
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Software projects
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 @misc{serde,
-  title = {serde},
+  title    = {serde},
   subtitle = {Serialization framework for Rust},
-  note = {Website: \url{https://serde.rs/}. \
-          Repository: \url{https://github.com/serde-rs/serde}},
-  version = {1.0},
-  date = {2017-07-05},
+  note     = {Website: \url{https://serde.rs/}. \
+              Repository: \url{https://github.com/serde-rs/serde}},
+  version  = {1.0},
+  date     = {2017-07-05},
   keywords = {software},
 }
 
 @misc{serdejson,
-  title = {serde\_json},
+  title    = {serde\_json},
   subtitle = {JSON Serialization for Rust},
-  note = {Repository: \url{https://github.com/serde-rs/json}},
-  version = {1.0},
-  date = {2017-07-05},
+  note     = {Repository: \url{https://github.com/serde-rs/json}},
+  version  = {1.0},
+  date     = {2017-07-05},
   keywords = {software},
 }
 
 @misc{frunk,
-  title = {frunk},
+  title    = {frunk},
   subtitle = {Funktional generic programming in Rust},
-  note = {Repository: \url{https://github.com/lloydmeta/frunk}},
-  version = {0.1.30},
-  date = {2017-07-05},
+  note     = {Repository: \url{https://github.com/lloydmeta/frunk}},
+  version  = {0.1.30},
+  date     = {2017-07-05},
   keywords = {software},
 }
 
 @misc{fsharpdata,
-  title = {F\# Data},
+  title    = {F\# Data},
   subtitle = {Library for Data Access},
-  note = {Website: \url{http://fsharp.github.io/FSharp.Data/}. \
-          Repository: \url{https://github.com/fsharp/FSharp.Data}},
-  version = {2.3.3},
-  date = {2017-07-05},
+  note     = {Website: \url{http://fsharp.github.io/FSharp.Data/}. \
+              Repository: \url{https://github.com/fsharp/FSharp.Data}},
+  version  = {2.3.3},
+  date     = {2017-07-05},
   keywords = {software},
 }
