@@ -18,3 +18,40 @@ As mentioned in the introduction JSON is a schemaless data format. There is howe
 % OpenAPI
 
 % Tagged JSON: https://www.tjson.org
+
+\newpage
+\section{Implementation state}
+
+Throughout this thesis I have written about how the project does work and ideally should work. This section is meant as a quick reference to what state each mentioned feature of the implementation is in, without having to dig through discussion or code.
+
+% green box
+% \textcolor{green}{\rule{0.5cm}{0.5cm}}
+
+\newcommand\ok{\checkmark}
+\begin{center}
+\renewcommand\arraystretch{1.2}
+\begin{tabular}{l r c c c c c}
+\textbf{Feature}          & \textbf{Relevant sections} & \rotatebox{45}{\textbf{Inference}}\kern-25pt & \rotatebox{45}{\textbf{Codegen}}\kern-25pt & \rotatebox{45}{\textbf{Macro}}\kern-15pt & \rotatebox{45}{\textbf{CLI}}\kern-5pt & \rotatebox{45}{\textbf{Web}}\kern-10pt \\ \hline
+Basic inference algorithm & \ref{sec:shape-inference}                                & \ok & \ok & \ok & \ok & \ok \\
+Type visibility           & \ref{sec:visibility}                                     & \ok & \ok & \ok & \ok & \ok \\
+Field visibility          & \ref{sec:visibility}                                     & \ok & \ok & -   & -   & -   \\
+Derive list               & \ref{sec:derive-list}, \ref{sec:use-of-derivable-traits} &     & \ok & -   & -   & \ok \\
+Nullable collections      &                                                          &     & \ok & -   & -   & -   \\
+Missing fields            &                                                          &     & \ok & -   & -   & -   \\
+Unknown fields            &                                                          &     & \ok & -   & -   & -   \\
+JSON Pointers             & \ref{sec:json-pointers}, \ref{sec:ext-json-pointers}     & -   & -   & -   & -   & -   \\
+‹use_type›: shape         &                                                          & -   &     &     &     &     \\
+‹use_type›: opaque        &                                                          & -   & -   &     &     &     \\
+‹use_type›: map           & \ref{sec:ext-maps}                                       & -   & -   &     &     &     \\
+‹use_type›: tuple         & \ref{sec:ext-tuples}                                     & -   & -   & -   & -   & -   \\
+‹use_type›: string enum   &                                                          & -   & -   &     &     &     \\
+‹use_type›: unsigned      &                                                          & -   & -   & -   & -   & -   \\
+‹same_as›                 &                                                          & -   & -   &     &     &     \\
+‹type_name›               &                                                          & -   & -   &     &     &     \\
+‹pattern_type›            &                                                          & -   & -   &     &     &     \\
+Macro syntax input        & \ref{sec:improving-synergy}                              &     &     &     & -   & -   \\
+Macro syntax output       & \ref{sec:improving-synergy}                              &     &     &     & -   & -   \\
+\multicolumn{7}{c}{} \\
+\multicolumn{7}{c}{\textbf{Legend:} Complete: \ok\  Missing: -\ \  Not applicable: \ \ \textit{(blank)}}
+\end{tabular}
+\end{center}
