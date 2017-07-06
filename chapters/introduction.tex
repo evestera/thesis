@@ -28,7 +28,7 @@ struct Person {
 \label{lst:struct}
 \end{listing}
 
-A struct declaration in Rust is a number of fields with types. Rust is not object oriented, and there is no inheritance for structs. Polymorphism in Rust is instead supported by enumerated types and traits.
+A struct declaration in Rust is a number of fields with types. Also known as a product type or record. Rust is not object oriented, and there is no inheritance for structs. Polymorphism in Rust is instead supported by enumerated types and traits.
 
 \subsection{Enums}
 
@@ -43,7 +43,7 @@ enum Option<T> {
 \label{lst:enum}
 \end{listing}
 
-An enum in Rust is a data type that is one alternative from a number of variants, i.e. an enumerated type. A declaration of an enum, as seen in listing~\ref{lst:enum} is given as a list of variant names, used as constructors. Each variant can optionally carry some associated data.
+An enum in Rust is a data type that is one alternative from a number of variants, i.e. an enumerated type, sum type or union. A declaration of an enum, as seen in listing~\ref{lst:enum} is given as a list of variant names, used as constructors. Each variant can optionally carry some associated data.
 
 Rust supports pattern matching on enum types, and verifies that any match is exhaustive.
 
@@ -111,8 +111,8 @@ Declarative macros in Rust are also known as \say{macros by example} or \say{pat
 Procedural macros are macros where the expansion is done by running a procedure rather than by evaluating rules. To create a procedural macro in Rust you create a library that exposes a function that takes a ‹TokenStream› as input and outputs a ‹TokenStream›. Since this library and function can use arbitrary Rust code to generate its output, it can do things that are outside the scope of the normal compiler. Examples of things there are already procedural macro libraries for are:
 
 \begin{itemize}
-  \item Generating a type-safe DSL (at compile time) for communicating with an SQL database, by inspecting said database.\footnote{\url{http://diesel.rs/}}
-  \item Compiling graphics shaders at Rust compile time.\footnote{\url{https://github.com/tomaka/vulkano}}
+  \item Generating a type-safe DSL (at compile time) for communicating with an SQL database, by inspecting said database.\cite{diesel}
+  \item Compiling graphics shaders at Rust compile time.\cite{vulkano}
 \end{itemize}
 
 % Possible expansions here:
@@ -124,8 +124,7 @@ While strictly speaking not a part of the Rust programming language, Cargo comes
 
 For developers from languages with strong tooling support this may not seem like a very big deal. However, for both C and C++ adding a dependency to a project is a major decision due to the burden it places on developers and sometimes even users.
 
-% explain crates here
-% \footnote{A crate is the equivalent of a library or a package in Cargo, Rust's package manager}
+\placeholder{Explain crates here} ... A crate is the equivalent of a library or a package in Cargo, Rust's package manager.
 
 % Possible expansions here:
 % - Example of Cargo.toml and cargo commands
@@ -139,15 +138,12 @@ JSON is a text based data format for structured data. It is very commonly used a
 The format as described by the two official JSON specifications -- IETF RFC 7159\cite{RFC7159} and ECMA 404\cite{ECMA404} -- is very simple. JSON values can only be an object, array, number or string, or the literals ‹true›, ‹false› or ‹null›.
 % contrast simplicity to XML?
 
+% Actual JSON grammar here?
+
+% FIXME: The whole misnomer thing is a bit iffy
 A JSON object is an unordered collection of mappings from keys (that are JSON strings) to JSON values. As this closely corresponds to what is usually referred to as a map, or a dictionary in most programming languages, the term object may seem like a bit of a misnomer here, arising from JSONs background as a subset of JavaScript.
 
 A JSON array is an ordered collection of JSON values. It is worth noting that JSON places no restriction on the types of the values of the array, and as such it can sometimes be a heterogenous collection.
-
-% A JSON number...
-
-% A JSON string...
-
-% Everything is "nullable"
 
 \begin{listing}[ht!]
 \begin{minted}{json}
@@ -167,6 +163,12 @@ A JSON array is an ordered collection of JSON values. It is worth noting that JS
 \end{listing}
 
 Listing~\ref{lst:json1} shows a basic example of a JSON object. Since JSON objects and arrays can themselves contain objects and arrays, data serialized as JSON can be arbitrarily deeply nested, but JSON itself has no support for any kind of references.
+
+\placeholder{A JSON number...}
+
+\placeholder{A JSON string...}
+
+% Everything is "nullable"
 
 \subsection{Reading JSON in dynamically typed languages}
 
@@ -317,6 +319,8 @@ let main argv =
 \end{listing}
 
 In listing~\ref{lst:fsharpsample} I have provided a simple example of the use of a type provider\footnote{Adapted from the documentation for the particular type provider shown: \url{http://fsharp.github.io/FSharp.Data/library/JsonProvider.html}}. A type is first generated from a sample at compile time, and this type is then used to parse another instance of the same type at runtime. The parsed object is then used as a fully native object.
+
+% FIXME: Actually write about FSharp Data
 
 To reiterate: the expression ‹JsonProvider<...>› is evaluated at compile time and provides a type to the compiler. This lets the compiler type check expressions like ‹simple.Age›. The compiler also provides functionality that makes it easy for implementors of editors to provide autocomplete and similar functionality for types generated by type providers.
 
