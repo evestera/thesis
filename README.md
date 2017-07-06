@@ -1,10 +1,6 @@
-# Thesis
+# Rust types from JSON samples
+#### A macro based approach to type providers in Rust
 
-## Rust code examples
+My thesis about [json_typegen](https://github.com/evestera/json_typegen).
 
-All runnable examples can be run in the following manner if a rust toolchain is installed:
-
-    cd rustcode
-    cargo run --example <name of example>
-
-To install Rust follow the instructions at https://www.rustup.rs
+Rendered PDF of this can be found at [erik.vestera.as/thesis/](http://erik.vestera.as/thesis/).
