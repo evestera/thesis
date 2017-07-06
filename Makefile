@@ -7,19 +7,11 @@ default: main.pdf
 forside.pdf: forside/forside.tex
 	cd forside; xelatex -output-directory=.. $<
 
-main.pdf: main.tex forside.pdf chapters/*.tex fonts-custom.tex
+main.pdf: main.tex forside.pdf chapters/*.tex fonts.tex
 	lualatex -shell-escape $<
 	biber $(basename $<)
 	lualatex -shell-escape $<
 	lualatex -shell-escape $<
-
-nofonts.pdf: main.tex main.pdf fonts-none.tex
-	mv main.pdf main-bak.pdf
-	ln -sf fonts-none.tex fonts.lnk
-	lualatex -shell-escape $<
-	ln -sf fonts-custom.tex fonts.lnk
-	mv main.pdf nofonts.pdf
-	mv main-bak.pdf main.pdf
 
 # Make ctags for Atom. Unescape backslashes due to Atom bug.
 tags: chapters/*.tex
@@ -30,5 +22,5 @@ tags: chapters/*.tex
 	scp $< vestera.as:/home/erik/www/thesis
 	touch $@
 
-DEPLOYABLES = index.html main.pdf nofonts.pdf
+DEPLOYABLES = index.html main.pdf
 deploy: $(foreach DEPLOYABLE,$(DEPLOYABLES),.deploy-$(DEPLOYABLE))
