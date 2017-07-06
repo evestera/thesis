@@ -9,9 +9,9 @@ This is achieved by drawing inspiration from a feature of the F\# programming la
 \section{The Rust programming language}
 \label{sec:rust-intro}
 
-The Rust programming language is a modern, open source, systems programming language with C-like surface syntax. It is a statically typed language with type inference, with a focus on memory safety and zero cost abstractions. It does not use a garbage collector and the Rust core library can be used without access to heap allocation.
+The Rust programming language is a modern, open source, systems programming language with C-like surface syntax. It is a statically typed language with type inference, with a focus on memory safety and zero-cost abstractions. It does not use a garbage collector and the Rust core library can be used without access to heap allocation.
 
-While the basic syntax of Rust can be said to be C-like it also has a lot of functionality and syntax reminiscent of functional languages, and in particular languages of the ML-family. Features such as closures, pattern matching and monadic error handling are available and a significant part of idiomatic Rust code.
+While the basic syntax of Rust can be said to be C-like it also has a lot of functionality and syntax reminiscent of functional languages and in particular languages of the ML-family. Features such as closures, pattern matching and monadic error handling are available and a significant part of idiomatic Rust code.
 
 What follows is a very basic introduction to the parts of Rust we need to talk about in this thesis. For more details see \href{https://doc.rust-lang.org/book/}{the Rust book}\footnote{\url{https://doc.rust-lang.org/book/}}.
 
@@ -45,7 +45,7 @@ enum Option<T> {
 
 An enum in Rust is a data type that is one alternative from a number of variants, i.e. an enumerated type, sum type or union. A declaration of an enum, as seen in listing~\ref{lst:enum} is given as a list of variant names, used as constructors. Each variant can optionally carry some associated data.
 
-Rust supports pattern matching on enum types, and verifies that any match is exhaustive.
+Rust supports pattern matching on enum types and verifies that any match is exhaustive.
 
 \subsection{Traits}
 \label{sec:traits}
@@ -133,17 +133,27 @@ For developers from languages with strong tooling support this may not seem like
 \section{JSON}
 \label{sec:json}
 
-JSON is a text based data format for structured data. It is very commonly used as a data interchange format in modern HTTP-based architectures. JSON was originally based on a subset of the JavaScript programming language, but is designed to be language-independent and is now used in interaction between applications written in practically all programming languages.
+JSON is a text-based data format for structured data. It is very commonly used as a data interchange format in modern HTTP-based architectures. JSON was originally based on a subset of the JavaScript programming language, but is designed to be language-independent and is now used in the interaction between applications written in practically all programming languages.
 
-The format as described by the two official JSON specifications -- IETF RFC 7159\cite{RFC7159} and ECMA 404\cite{ECMA404} -- is very simple. JSON values can only be an object, array, number or string, or the literals ‹true›, ‹false› or ‹null›.
+\begin{listing}[ht!]
+\begin{align*}
+\textit{value} ::=  &\ \textit{object} \mid \textit{array} \mid \textit{number} \mid \textit{string} \mid ‹true› \mid ‹false› \mid ‹null› \\
+\textit{object} ::=  &\ \icode{\{}\ [\ \textit{string}\ ‹:›\ \textit{value}\ \text{*}(\ ‹,›\ \textit{string}\ ‹:›\ \textit{value}\ )\ ]\ \icode{\}} \\
+\textit{array} ::= &\ ‹[›\ [\ \textit{value}\ \text{*}(\ ‹,›\ \textit{value}\ )\ ]\ ‹]› \\
+\textit{number} ::= &\ [\ ‹-›\ ]\ \textit{int}\ [\ \textit{frac}\ ]\ [\ \textit{exp}\ ]\ \\
+\textit{string} ::= &\ ‹"›\ \text{*}\textit{char}\ ‹"›
+\end{align*}
+\caption{The JSON grammar from RFC 7159. It is somewhat simplified as the actual specification is very precise. See the full specification for the exact definitions of \textit{int}, \textit{frac}, \textit{exp} and \textit{char}.}
+\label{lst:json-grammar}
+\end{listing}
+
+The format as described by the two official JSON specifications -- IETF RFC 7159\cite{RFC7159} and ECMA 404\cite{ECMA404} -- is very simple. As can be seen from the grammar in listing~\ref{lst:json-grammar} a JSON value can only be an object, array, number or string, or the literals ‹true›, ‹false› or ‹null›. In addition, there is no way to define new types, references or to specify external resources or definitions.
 % contrast simplicity to XML?
 
-% Actual JSON grammar here?
-
 % FIXME: The whole misnomer thing is a bit iffy
-A JSON object is an unordered collection of mappings from keys (that are JSON strings) to JSON values. As this closely corresponds to what is usually referred to as a map, or a dictionary in most programming languages, the term object may seem like a bit of a misnomer here, arising from JSONs background as a subset of JavaScript.
+A JSON object is a collection of mappings from keys (that are JSON strings) to JSON values. As this closely corresponds to what is usually referred to as a map or a dictionary in most programming languages, the term object may seem like a bit of a misnomer here, arising from JSONs background as a subset of JavaScript. Whether or not an object is an unordered is explicitly unspecified by RFC 1759, but \say{Implementations whose behavior does not depend on member ordering will be interoperable in the sense that they will not be affected by these differences.}\cite[6]{RFC7159}
 
-A JSON array is an ordered collection of JSON values. It is worth noting that JSON places no restriction on the types of the values of the array, and as such it can sometimes be a heterogenous collection.
+A JSON array is an ordered collection of JSON values. It is worth noting that JSON places no restriction on the types of the values of the array, and as such, it can sometimes be a heterogeneous collection.
 
 \begin{listing}[ht!]
 \begin{minted}{json}
@@ -162,7 +172,7 @@ A JSON array is an ordered collection of JSON values. It is worth noting that JS
 \label{lst:json1}
 \end{listing}
 
-Listing~\ref{lst:json1} shows a basic example of a JSON object. Since JSON objects and arrays can themselves contain objects and arrays, data serialized as JSON can be arbitrarily deeply nested, but JSON itself has no support for any kind of references.
+Listing~\ref{lst:json1} shows a basic example of a JSON object. Since JSON objects and arrays can themselves contain objects and arrays, data serialized as JSON can be arbitrarily deeply nested, but as mentioned JSON itself has no support for any kind of references, so there is no possibility of loops or infinite types.
 
 \placeholder{A JSON number...}
 
@@ -190,7 +200,7 @@ print(parsed.phoneNumbers[0].areaCode)
 \label{lst:readjsonpy}
 \end{listing}
 
-In dynamically typed programming languages reading data from deserialized JSON is relatively straightforwards, as seen in listing~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy}. The code in these listings can however fail at any point if the deserialized data does not match expectations, so in many real world use cases the code will be a bit more complex.
+In dynamically typed programming languages reading data from deserialized JSON is relatively straightforward, as seen in listings~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy}. The code in these listings can, however, fail at any point if the deserialized data does not match expectations, so in many real world use cases the code will be a bit more complex.
 
 \subsection{Reading JSON in statically typed languages}
 
@@ -203,9 +213,9 @@ For my examples I will use Rust, but first I need to introduce «Serde»:
 
 «Serde» is a Rust framework for serialization and deserialization. The core of the framework is independent of the source/target data format, and the input/output of specific data formats is provided by separate crates.
 
-«Serde» works by providing two traits, ‹Serialize› and ‹Deserialize›, that Rust types can implement. The core library has already implemented these traits for the most common data types like ‹i64›, ‹String›, ‹Vec› and ‹HashMap›. In addition, the crate «serde_derive» provides code to derive the traits for custom types.
+«Serde» works by providing two traits, ‹Serialize› and ‹Deserialize›, that Rust types can implement. The core library has already implemented these traits for the most common data types like ‹i64›, ‹String›, ‹Vec› and ‹HashMap›. In addition, the crate «serde_derive» provides code for deriving ‹Serialize› and ‹Deserialize› for custom -- i.e. your own -- types.
 
-Once a Rust type implements the necessary trait, data can be converted with the various format specific crates, that provide implementations for one or both of the traits «Serializer» and «Deserializer». «serde_json» provides implementations of these types for JSON. It also provides various other useful functionality for working with JSON.
+Once a Rust type implements the necessary trait, data can be converted with the various format specific crates, that provide implementations for one or both of the traits «Serializer» and «Deserializer». «serde_json» provides implementations of these types for JSON. It also provides some other functionality that is useful for working with JSON.
 
 \subsubsection{Catchall types}
 
@@ -224,7 +234,7 @@ enum Value {
 \label{lst:valueenum}
 \end{listing}
 
-Listing~\ref{lst:valueenum} shows the Rust type ‹Value› from the library «serde_json». Any legal JSON can be encoded by this type. Similar types can be created in most programming languages. However, working with such types in a type-safe manner can be both tedious and error-prone. The code in listing~\ref{lst:readjsonrs1} does approximately the same thing as the code in listing~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy}, but is quite clearly a lot more complicated. It does have one advantage though, no possibility of a runtime error when accessing the data.
+Listing~\ref{lst:valueenum} shows the Rust type ‹Value› from the library «serde_json». Any legal JSON can be encoded by this type. Similar types can be created in most programming languages. However, working with such types in a type-safe manner can be both tedious and error-prone. The code in listing~\ref{lst:readjsonrs1} does approximately the same thing as the code in listings~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy}, but is quite clearly a lot more complicated. It does have one advantage though, no possibility of a runtime error when accessing the data.
 
 \begin{listing}[ht!]
 \begin{minted}{rust}
@@ -270,7 +280,7 @@ if let Some(num) = parsed.pointer("/phoneNumbers/0/areaCode") {
 
 What we actually want are custom types, that accurately reflects the actual data. This way, any mismatches between our assumptions and the actual structure of the data is revealed at the time of parsing. And accessing any particular field is just as type-safe as any other native data in the programming language.
 
-Listing~\ref{lst:readjsonrs3} shows an example of using such custom data types with the «serde» framework. However, even for this small example this approach required 9 significant lines of code for the types. And with real world data sources actual JSON data can be significantly larger and more complex. So while custom types are preferable once written, actually writing them can often be a significant hurdle.
+Listing~\ref{lst:readjsonrs3} shows an example of using such custom data types with the «serde» framework. However, even for this small example this approach required 9 significant lines of code for the types. And with real-world data sources, actual JSON data can be significantly larger and more complex. So while custom types are preferable once written, actually writing them can often be a significant hurdle.
 
 \begin{listing}[ht!]
 \begin{minted}{rust}
@@ -297,7 +307,7 @@ println!("{}", parsed.phoneNumbers[0].areaCode);
 
 \section{Type providers in F\#}
 
-The F\# programming language is an open source functional programming language for the Common Language Runtime with a ML-like surface syntax. The language feature I will focus on here is what is known as a type provider.
+The F\# programming language is an open source functional programming language for the Common Language Runtime with an ML-like surface syntax. The language feature I will focus on here is what is known as a type provider.
 
 A type provider provides access to an external, complex resource, in a statically typed environment, without requiring the programmer to spell out type information. It does so not by working around the type system, but by generating type information at compile time, allowing code accessing the resource to be statically type checked.
 
@@ -338,14 +348,14 @@ The most significant benefit of type providers is that they enable type safe acc
 
 As mentioned, such type safe access can also be achieved by manually writing the custom types, but the ease of use of a type provider makes it very easy to add a new external resource and start experimenting. Not only is the barrier of having to write boilerplate code reduced or removed, but type information gleaned through e.g. autocomplete facilitates exploration of the resource.
 
-When working with external data, the code we write encode our assumptions about the data we are working with. E.g. if I have parsed some data into a variable ‹p› and I write code like ‹let real_name: String = p.name›, the code encodes my assumptions that the data has a field with the name ‹name›, and that said field is a string. When the types are in sync with the external data the type checking will thus check that our assumptions match the actual structure of the data. Additionally the type checking will \emph{only} check the assumptions we state through our use of the data, which are likely to be the ones we care about.
+When working with external data, the code we write encode our assumptions about the data we are working with. E.g. if I have parsed some data into a variable ‹p› and I write code like ‹let real_name: String = p.name›, the code encodes my assumptions that the data has a field with the name ‹name›, and that said field is a string. When the types are in sync with the external data the type checking will thus check that our assumptions match the actual structure of the data. Additionally, the type checking will \emph{only} check the assumptions we state through our use of the data, which are likely to be the ones we care about.
 
 % Detect API changes
 
 \subsection{Disadvantages of type providers}
 \label{sec:disadvantages-of-type-providers}
 
-While type providers have significant advantages, they also have some disadvantages. Type providers are essentially a code generation tool. However, type providers do not give the user access to the generated code. In part this is because some type providers for F\# generate erased types which are not really representable by the normal code of F\#. Some type providers also generate types on demand, because the accessed data is too large to represent or otherwise impractical to generate all at once.
+While type providers have significant advantages, they also have some disadvantages. Type providers are essentially a code generation tool. However, type providers do not give the user access to the generated code. In part, this is because some type providers for F\# generate erased types which are not really representable by the normal code of F\#. Some type providers also generate types on demand, because the accessed data is too large to represent or otherwise impractical to generate all at once.
 
 % Understanding code you cannot see
 
@@ -357,7 +367,7 @@ No access to the generated code also causes a certain amount of lock-in. Without
 
 % Network access
 
-A completely different issue with certain type providers is that they provide the greatest benefit with concern to the type checking when verifying the use of an external resource. However if access to this external resource requires network access, this causes the compilation of the program to require network access for every build. Sometimes requiring network access to build is not a big concern, but other times it can be a big concern, or even completely out of the question.
+A completely different issue with certain type providers is that they provide the greatest benefit with concern to the type checking when verifying the use of an external resource. However, if access to this external resource requires network access, this causes the compilation of the program to require network access for every build. Sometimes requiring network access to build is not a big concern, but other times it can be a big concern, or even completely out of the question.
 
 % Build can break without code changes
 Another concern many people have with type providers is that since the type checking checks if the code matches the data, the build can break if the structure of the data changes. In other words, the advantage of having our assumptions checked by the type checking also means that the build can break without any code changes. This runs contrary to the concept of reproducible builds which is a very common goal for build systems. One may counter that an external data source like an API is part of the system when it is used in a program, and as such a build failure is the correct behavior, but it is nevertheless a contentious issue.
