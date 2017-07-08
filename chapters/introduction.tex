@@ -349,7 +349,7 @@ So what \emph{is} a type provider? How do they work? From an implementation stan
 
 \begin{itemize}
   \item Compile-time meta-programming, with the flexibility of a full programming language.
-  \item Support for thunks, i.e. lazy or delayed evaluation, of parts of the abstract syntax tree, and letting such thunks be made by compile-time meta-programming.
+  \item Support for thunks, i.e. lazy or delayed evaluation, of at least parts of the abstract syntax tree, and letting such thunks be made by compile-time meta-programming.
 \end{itemize}
 
 Additionally, for a type provider to make sense the language has to be statically typed. In a dynamically typed language, any type checking is done at runtime, and is tied to actual instances, so providing extra type information before runtime does not provide much benefit. Since type providers can create a large number of types it is also beneficial if the language has type inference so the actual names of the sub-types are less significant.
@@ -360,7 +360,7 @@ In F\# type provider implementations it is possible to add type members as thunk
 
 A good example of a type provider which makes use of this functionality is the World Bank type provider in \fsharpdata.
 
-\placeholder{\fsharpdata World Bank provider example and explanation.}
+\placeholder{\fsharpdata\ World Bank provider example and explanation.}
 
 While thunks as parts of generated types is clearly a very powerful feature, many type providers are not reliant on it. If it is feasible to have all the necessary data available at once, and the generated type is not too large, delayed production of the code is not required. For example the ‹JsonProvider› from \fsharpdata\ which creates a single type hierarchy from a limited set of samples, does not need thunks. In other words, something like type providers like ‹JsonProvider› \emph{should} be possible in Rust. In chapter~\ref{chap:project-presentation} I will show how I have attempted to achieve this, but let us first look at the advantages and disadvantages of the type providers it is inspired by.
 

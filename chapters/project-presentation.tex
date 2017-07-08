@@ -161,11 +161,13 @@ json_typegen -n Point samples/point.json
 \label{fig:web-screenshot}
 \end{figure}
 
+The third interface I have made to «json_typegen» is a web interface. The crate «json_typegen_web» provides a binary that both provides a web API for the code generation, as well as hosting the static HTML/JavaScript files providing a frontend to this API. This interface is currently deployed and available at \url{http://vestera.as/json_typegen/}.
+
 The procedural macro and the command line interface both require the user to download and compile a somewhat significant amount of code. In small projects where the sample can be assumed not to change, this initial cost may for a lot of users seem to outweigh the benefits of the code generation.
 
-Both of these kinds of interfaces also have a somewhat suboptimal user experience if the user wants to use a large number of configuration options. To counteract both of these problems I have made a web interface as a third way to use access the code generation logic.
+The web interface provides a convenient way to do quick one-time generation of types from samples, or for new users to test the project before potentially deciding to use one of the other interfaces.
 
-The crate «json_typegen_web» provides a binary that both provides a web API for the code generation, as well as hosting the static HTML/JavaScript files providing a frontend to this API.
+Having a web interface also provides some nice user experience benefits. A web form has good potential for making visible the various configuration options for the code generation, and quickly testing them out. It can also provide documentation for each feature directly inline.
 
 \section{Shared code}
 \label{sec:shared-code}
@@ -194,7 +196,7 @@ The different interfaces we want to provide place some requirements on what sign
 ‹TokenStream› \rightarrow ‹String› &\Rightarrow ‹String› \rightarrow ‹TokenStream› & \text{macro}
 \end{align*}
 
-In the real project things are a bit more complicated, as more types are involved, but the central point that we can consolidate different interfaces to a shared core that does the actual transformation thanks to conversion methods still stands.
+At the time of writing, ‹TokenStream› is a mostly opaque type, and we are thus forced to choose the second alternative, but this may change in the future. In the real project things are a bit more complicated, as more types are involved, but the central point that we can consolidate different interfaces to a shared core that does the actual transformation thanks to conversion methods still stands.
 
 \section{Synergy}
 % Demonstrate how CLI or web interface can be used together with proc-macro. Explain how this then gives autocomplete etc.
@@ -205,12 +207,10 @@ With the three interfaces, there is a clear migration path for most use cases. A
 
 If the code generation is suitable for their use case, copying and pasting from a website can get tedious. That combined with the additional benefits of the procedural macro will likely lead people to try the procedural macro.
 
-As mentioned in section~\ref{sec:macro-limitations}, the procedural macro has some limitations, and as mentioned in section~\ref{sec:disadvantages-of-type-providers} even real type providers have their disadvantages. With a combination of the interfaces in this project, interesting solutions or workarounds for several of these issues are possible.
+As mentioned in section~\ref{sec:macro-limitations}, the procedural macro has some limitations, and as mentioned in section~\ref{sec:disadvantages-of-type-providers} even the original type providers have their disadvantages. With a combination of the interfaces in this project, interesting solutions or workarounds for several of these issues are possible.
 
-% FIXME: Unreadable sentence
-Perhaps the most obvious concern that is no longer an issue is the fact that it is not possible to see expanded code with the type providers from \fsharpdata\ and the procedural macro in «json_typegen».
-The two additional interfaces in this project both make it easy to see the generated code.\footnote{On nightly versions of Rust it is in fact also possible to see the resulting code after macro expansion. However, since it is fully expanded it is primarily useful for debugging purposes.}
-% (also mention cargo-expand here)
+
+Perhaps most obviously, we now have ways to see the expanded code readily available. The two additional interfaces in «json_typegen» both make it easy to see the generated code. On nightly versions of Rust it is in fact also possible to see the resulting code after macro expansion. However, since this code is fully expanded\footnote{Fully expanded, in the sense that every file in the crate has been inlined, every derive implementation has been made, and every ‹println› invocation has been expanded.} it is primarily useful for debugging purposes. Usually, a user only wants a single \say{step} of expansion, e.g. only to see what «json_typegen» itself does.
 
 The two additional interfaces also make lock-in almost a non-issue. If a user wants to stop using «json_typegen» entirely, they can just do a final one-time generation of the code. They can do this using either the web or command line interface, and replace the macro invocation with the generated code.
 
@@ -311,7 +311,7 @@ All of these alternatives have significant downsides, so if configuration of the
 
 While it is clear that «json_typegen» should have at least \emph{some} configuration options, it is not obvious to what extent. It is probably not a good idea to try to cover every edge case, as such a goal could quickly lead the code to become too complex to maintain and expand. We can, however, make an effort to cover the most common cases, and thus increase the usefulness of the project for most people.
 
-In the next sections, I will discuss the configuration options currently available in «json_typegen» and some proposals for future expansions of these options.
+In the next sections, I will discuss the configuration options that currently available in «json_typegen» and some proposals for future expansions of these options. For a quick overview of the implementation state of these, and other features of «json_typegen», see section~\ref{sec:implementation-state}.
 
 \subsection{Visibility}
 \label{sec:visibility}
@@ -322,7 +322,7 @@ Private visibility for types from «json_typegen» was chosen as the default bec
 
 To set a more public visibility for the generated types, a visibility specifier may be given along with the name for the root type. E.g. ‹json_typegen!("pub Point", ...)› would create the type ‹Point› as a public type, and if the type name ‹"pub(crate) Point"› was given, it would be created as a type visible within the current crate.
 
-By default in «json_typegen» struct fields \say{inherit} the visibility specifier (if any) of the containing struct. This should usually be the desired behavior, but if not it can be overridden with a visibility specifier set using the option ‹field-visibility›.
+By default in «json_typegen» struct fields \say{inherit} the visibility specifier (if any) of the containing struct. This should usually be the desired behavior, but if not it can be overridden with a visibility specifier set using the option ‹field_visibility›.
 
 \subsection{Derive list}
 \label{sec:derive-list}
