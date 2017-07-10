@@ -116,6 +116,12 @@ We will look at these extensions and their consequences for the algorithm in sec
 
 \section{Generating Rust types}
 
+Once a shape tree has been inferred from the sample and intermediate passes have been run to improve the inferred shapes the shape tree is used to generate Rust code.
+
+The code generation recursively matches on the types of the shape tree.
+
+Code is generated via quasiquotation, using the «quote» library.
+
 % field and type naming and renaming
 
 % runnable example
@@ -123,7 +129,7 @@ We will look at these extensions and their consequences for the algorithm in sec
 \subsection{Use of derivable traits}
 \label{sec:use-of-derivable-traits}
 
-As outlined in section~\ref{sec:derive-list} a lot of the functionality of «json_typegen» is founded on the fact that many traits be derived -- i.e. that they can be implemented by just adding their name to a list -- and that this works even for complex generated types.
+As outlined in section~\ref{sec:derive-list} a lot of the functionality of «json_typegen» is founded on the fact that many traits can be derived -- i.e. that they can be implemented by just adding their name to a list -- and that this works even for complex generated types.
 
 The fact that this is possible relies on two important preconditions:
 
@@ -188,6 +194,8 @@ enum E {
 \label{sec:extensions}
 
 As have been mentioned earlier, there are several ways to extend this basic setup to better align with what handwritten code would look like. We will now look at a few such extensions. For the sake of simplicity, we will mostly not go into the details of how these extensions interact or the complete extended algorithms, focusing instead on each extension by itself.
+
+\subsection{Tagged any types}
 
 \placeholder{Describe (and maybe show) extension of inference to AnyOf / tagged any types.}
 

@@ -86,6 +86,7 @@
 \usepackage{multicol}
 \usepackage{dirtytalk}
 \usepackage{pdfpages}
+\usepackage{relsize}
 
 \newcommand\icode[1]{\texttt{\textbf{#1}}}
 
@@ -98,6 +99,7 @@
 \catcode`\« =\active
 \def«#1»{\emph{\detokenize{#1}}}
 \def\fsharpdata{\emph{F\# Data}}
+\def\cpp{{C\raisebox{.07em}{\smaller\kern-.07em+\kern-.09em+}}}
 
 \title{Rust types from JSON samples}
 %\subtitle{A macro based approach to type providers in Rust}
@@ -141,6 +143,10 @@
 \cleardoublepage
 
 \input{chapters/preface.tex}
+
+\cleardoublepage
+
+\input{chapters/abstract.tex}
 
 \cleardoublepage
 

@@ -1,0 +1,16 @@
+%!TEX root = ../main.tex
+
+\vspace*{2cm}
+\thispagestyle{plain}
+
+\begin{center}
+
+\section*{\hfil Abstract \hfil}
+
+\end{center}
+
+When programmers access external data in a statically typed programming language, they are often faced with a dilemma between convenient and type safe access to the data.
+
+In the programming language F\#, a concept called type providers has been proposed as a solution to this problem by having compiler support for libraries with the capability to generate types at compile time.
+
+This thesis presents «json_typegen», a project which aims to show the feasibility of similar solutions in the Rust programming language. The project uses compile-time metaprogramming along with alternative interfaces to the same code generation implementation to achieve convenient, type-safe access to data in the JSON data format. While JSON is chosen as the format for the presented library, the approach also applies to other data formats and sources.

@@ -2,14 +2,16 @@
 
 \chapter{Introduction}
 
-In this thesis I will show how we achieve type-safe access in the Rust programming language to data encoded in JSON format, provided that we at compile time (or earlier) have access to a sample with the same structure as the data we wish to read at runtime.
+In this chapter we will look at the background for the «json_typegen» project.
 
-This is achieved by drawing inspiration from a feature of the F\# programming languages called type providers and approximating this feature in Rust with -- among other tools -- a procedural macro.
+First, in section~\ref{sec:rust-intro}, we will look at the Rust programming language. Then, in section~\ref{sec:json}, we will look at the JSON data interchange format, and the challenges associated with accessing data in JSON from statically typed programming languages, and Rust in particular. Finally, in section~\ref{sec:type-providers} we will look at how these challenges have been attempted solved with type providers in the programming language F\#.
 
 \section{The Rust programming language}
 \label{sec:rust-intro}
 
-The Rust programming language is a modern, open source, systems programming language with C-like surface syntax. It is a statically typed language with type inference, with a focus on memory safety and zero-cost abstractions. It does not use a garbage collector and the Rust core library can be used without access to heap allocation.
+The Rust programming language is a modern, open source programming language with C-like surface syntax. It is a statically typed language with type inference, with a focus on memory safety and zero-cost abstractions.
+
+Rust does not use a garbage collector and the core library can be used without access to heap allocation. This allows Rust to be used for what is often referred to as \say{systems programming}, for writing drivers, operating systems and code for microcontrollers. Spaces which has so far been occupied almost exclusively by C and \cpp. Rust tries to combine the low-level control of these languages and at the same time statically prevent whole classes of memory safety issues\cite{the-rust-language}.
 
 While the basic syntax of Rust can be said to be C-like it also has a lot of functionality and syntax reminiscent of functional languages and in particular languages of the ML-family. Features such as closures, pattern matching and monadic error handling are available and a significant part of idiomatic Rust code.
 
@@ -50,7 +52,7 @@ Rust supports pattern matching on enum types and verifies that any match is exha
 \subsection{Traits}
 \label{sec:traits}
 
-A trait specifies methods that a type needs to provide to implement the trait.
+A trait specifies methods that a type needs to provide to implement the trait. On a superficial level traits are similar to interfaces in languages like Java, and type classes in Haskell.
 
 Some traits can be derived -- automatically implemented -- by the compiler. This is done by annotating the type with a ‹derive› attribute with a list of the traits to derive implementations for.
 
@@ -120,11 +122,75 @@ Procedural macros are macros where the expansion is done by running a procedure 
 
 \subsection{Cargo}
 
-While strictly speaking not a part of the Rust programming language, Cargo comes with every normal Rust installation. Cargo is the package manager and build tool for the Rust ecosystem.
+While not a part of the Rust programming language itself, with every normal installation of Rust a command line tool known as Cargo is also installed. Cargo is the package manager and build tool for the Rust ecosystem. Cargo makes it easy to create new packages -- \say{crates} in Rust terminology -- building them, and managing other crates as dependencies.
 
-For developers from languages with strong tooling support this may not seem like a very big deal. However, for both C and C++ adding a dependency to a project is a major decision due to the burden it places on developers and sometimes even users.
+While users of some programming languages may be accustomed to build systems with good dependency management this is not the case for users of the traditional systems level languages, C and \cpp. Since this thesis is essentially about a dependency on offer, it is important to point out how much lower the barrier for adding dependencies is in Rust, than in C and \cpp.
 
-\placeholder{Explain crates here} ... A crate is the equivalent of a library or a package in Cargo, Rust's package manager.
+For a perspective on the difference in how the development experience differs it is useful to look at how the experience of going from nothing to a minimal project with a dependency is in Rust and \cpp.
+
+\subsubsection{Minimal project setup in \cpp}
+
+\begin{enumerate}
+  \item Choose and install a \cpp\ toolchain. What toolchains are available and how to install them differs from platform to platform, and some may have a toolchain installed. To keep things somewhat simple, installation is omitted here.
+  \item Choose and install a dependency manager. Throughout the years there have been several \cpp\ dependency manager projects that have come and gone, so this choice is not entirely without risks. Without going into the details why, I chose «conan»\footnote{\url{http://conan.io}}. The rest of these steps are based on the «conan» \say{Getting started}-guide\footnote{\url{http://docs.conan.io/en/latest/getting_started.html}}. Again installation depends somewhat on platform. For my part I installed it using «homebrew»\footnote{Which itself would have to been installed if it was not so already.}:\\
+        ‹brew install conan›
+  \item Choose and install a build tool. Since the «conan» guide uses «CMake» this is also what we will use here. Again, installation method differs, but for my part:\\
+        ‹brew install cmake›
+  \item Make a project directory:\\
+        ‹mkdir timer && cd timer›
+  \item Make and write a «conan» configuration file:\\
+        \icode{{\$}EDITOR conanfile.txt}
+  \item Write some actual \cpp\ code:\\
+        \icode{{\$}EDITOR timer.cpp}
+  \item Make and write a «CMake» configuration file:\\
+        \icode{{\$}EDITOR CMakeLists.txt}
+  \item Make a build directory:\\
+        ‹mkdir build && cd build›
+  \item Install dependencies:\\
+        ‹conan install ..›
+  \item Prepare build:\\
+        ‹cmake ..›
+  \item Build:\\
+        ‹cmake --build .›
+  \item Run the resulting program:\\
+        ‹bin/timer›
+\end{enumerate}
+
+% Install a \cpp\ toolchain
+% brew install conan
+% brew install cmake
+% mkdir timer && cd timer
+% $EDITOR conanfile.txt
+% $EDITOR timer.cpp
+% $EDITOR CMakeLists.txt
+% mkdir build && cd build
+% conan install ..
+% cmake ..
+% cmake --build .
+% bin/timer
+
+\subsubsection{Minimal project setup in Rust}
+
+\begin{enumerate}
+  \item Install the Rust toolchain:\\
+        ‹curl https://sh.rustup.rs -sSf | sh›
+  \item Create a new (binary) project:\\
+        ‹cargo new --bin timer && cd timer›
+  \item Add a dependency to the Cargo configuration file:\\
+        ‹echo 'tokio-timer = "*"' >Cargo.toml›
+  \item Write some actual Rust code:\\
+        \icode{{\$}EDITOR src/main.rs}
+  \item Build and run:\\
+        ‹cargo run›
+\end{enumerate}
+
+% curl https://sh.rustup.rs -sSf | sh
+% cargo new --bin timer && cd timer
+% echo 'tokio-timer = "*"' >Cargo.toml
+% $EDITOR src/main.rs
+% cargo run
+
+While the above examples do not cover tasks like finding new dependencies, publishing packages etc, they provide a clear example of the difference in the build tooling available.
 
 % Possible expansions here:
 % - Example of Cargo.toml and cargo commands
@@ -151,7 +217,7 @@ The format as described by the two official JSON specifications -- IETF RFC 7159
 % contrast simplicity to XML?
 
 % FIXME: The whole misnomer thing is a bit iffy
-A JSON object is a collection of mappings from keys (that are JSON strings) to JSON values. As this closely corresponds to what is usually referred to as a map or a dictionary in most programming languages, the term object may seem like a bit of a misnomer here, arising from JSONs background as a subset of JavaScript. Whether or not an object is an unordered is explicitly unspecified by RFC 1759, but \say{Implementations whose behavior does not depend on member ordering will be interoperable in the sense that they will not be affected by these differences.}\cite[6]{RFC7159}
+A JSON object is a collection of mappings from keys (that are JSON strings) to JSON values. As this closely corresponds to what is usually referred to as a map or a dictionary in most programming languages, the term object may seem like a bit of a misnomer here, arising from JSONs background as a subset of JavaScript. Whether or not an objects members are unordered is explicitly unspecified by RFC 1759, but \say{Implementations whose behavior does not depend on member ordering will be interoperable in the sense that they will not be affected by these differences.}\cite[6]{RFC7159}
 
 A JSON array is an ordered collection of JSON values. It is worth noting that JSON places no restriction on the types of the values of the array, and as such, it can sometimes be a heterogeneous collection.
 
@@ -174,9 +240,9 @@ A JSON array is an ordered collection of JSON values. It is worth noting that JS
 
 Listing~\ref{lst:json1} shows a basic example of a JSON object. Since JSON objects and arrays can themselves contain objects and arrays, data serialized as JSON can be arbitrarily deeply nested, but as mentioned JSON itself has no support for any kind of references, so there is no possibility of loops or infinite types.
 
-In RFC 7159 it is stated that \say{The representation of numbers is similar to that used in most programming languages.} However, there are some very significant differences to the most normal number types in most programming languages. A number in JSON can be arbitrarily large, and arbitrarily precise. The only actual rule for a number to be valid JSON is that it satisfies the grammar given in the specifications.
+In RFC 7159 it is stated that \say{The representation of numbers is similar to that used in most programming languages.} However, there are some very significant differences to the most normal number types in most programming languages. A number in JSON can be arbitrarily large, and arbitrarily precise. The only actual rule for a number to be valid JSON is that it satisfies the grammar given in the specifications. As this shows, while the specifications are quite simple, this simplicity leads to some complications and pitfalls.
 
-\placeholder{A JSON string...}
+A JSON string resembles string literals in many programming languages, with characters and escape sequences, like \icode{{\textbackslash}n} or \icode{{\textbackslash}u000a}, enclosed in quotation marks. As seen from the grammar, strings serve double duty in JSON as both object keys and general values. This means that many possible JSON keys can be quite challenging to map to valid identifiers in a programming language. It is for example perfectly valid to have an object with the keys ‹""›, ‹" "› and ‹"µ"›.
 
 % Everything is "nullable"
 
@@ -193,14 +259,14 @@ console.log(parsed.phoneNumbers[0].areaCode);
 
 \begin{listing}[ht!]
 \begin{minted}{python}
-parsed = JSON.load(jsonString)
-print(parsed.phoneNumbers[0].areaCode)
+parsed = json.loads(jsonString)
+print(parsed["phoneNumbers"][0]["areaCode"])
 \end{minted}
 \caption{Printing the first areaCode in Python}
 \label{lst:readjsonpy}
 \end{listing}
 
-In dynamically typed programming languages reading data from deserialized JSON is relatively straightforward, as seen in listings~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy}. The code in these listings can, however, fail at any point if the deserialized data does not match expectations, so in many real world use cases the code will be a bit more complex.
+In dynamically typed programming languages reading data from deserialized JSON is relatively straightforward, as seen in listings~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy}, showing parsing and reading in JavaScript and Python\footnote{It is also possible in Python to get the JSON deserialized into such forms that its syntax become more like the direct field access of JavaScript, but the code shown uses the default behaviour.} respectively. The code in these listings can, however, fail at runtime with exceptions or errors if the deserialized data does not match expectations. So in many real world use cases the code will be a bit more complex.
 
 \subsection{Reading JSON in statically typed languages}
 
@@ -234,7 +300,7 @@ enum Value {
 \label{lst:valueenum}
 \end{listing}
 
-Listing~\ref{lst:valueenum} shows the Rust type ‹Value› from the library «serde_json». Any legal JSON can be encoded by this type. Similar types can be created in most programming languages. However, working with such types in a type-safe manner can be both tedious and error-prone. The code in listing~\ref{lst:readjsonrs1} does approximately the same thing as the code in listings~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy}, but is quite clearly a lot more complicated. It does have one advantage though, no possibility of a runtime error when accessing the data.
+Listing~\ref{lst:valueenum} shows the Rust type ‹Value› from the library «serde_json». Any legal JSON can be encoded by this type. Similar types can be created in most programming languages. However, working with such types in a type-safe manner can be both tedious and error-prone. The code in listing~\ref{lst:readjsonrs1} does approximately the same thing as the code in listings~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy} using pattern matching. While the code is type-safe and will not fail at runtime, it is not particularly convenient.
 
 \begin{listing}[ht!]
 \begin{minted}{rust}
@@ -248,7 +314,7 @@ if let Some(array) = parsed.get("phoneNumbers") {
     }
 }
 \end{minted}
-\caption{Printing the first areaCode in Rust}
+\caption{Printing the first areaCode in Rust using pattern matching}
 \label{lst:readjsonrs1}
 \end{listing}
 
@@ -260,7 +326,7 @@ if let Some(array) = parsed.get("phoneNumbers") {
 
 \subsubsection{Stringly typed code}
 
-One way to make the catchall types easier to work with is to create helpers that essentially eschew the advantages of type checking, one way or the other. Listing~\ref{lst:readjsonrs2} shows two alternative ways to read from the parsed data. \morestuff
+One way to make the catchall types easier to work with is to create helpers that essentially skips individual checking of each field access. Listing~\ref{lst:readjsonrs2} shows two alternative ways to read from the parsed data.
 
 \begin{listing}[ht!]
 \begin{minted}{rust}
@@ -272,15 +338,19 @@ if let Some(num) = parsed.pointer("/phoneNumbers/0/areaCode") {
     println!("{}", num);
 }
 \end{minted}
-\caption{Printing the first areaCode in Rust}
+\caption{Printing the first areaCode in Rust using indexing expressions and JSON pointers}
 \label{lst:readjsonrs2}
 \end{listing}
 
+The first way shows how it is possible to use indexing syntax -- ‹container[index]› -- with the ‹Value› type, due to the fact that it implements the ‹Index› trait. In other words, very similarly to the syntax one would use with e.g. the default Python solution. While index expressions in Rust \emph{can} panic, the shown expression will actually not do so, as the ‹Value› implementation of the ‹Index› trait instead returns ‹Value::Null› if indexing fails. This does, however, conflate when indexing fails and when the data contains an actual ‹Null› value.
+
+The second approach shown instead uses a string, which encodes a path\footnote{The path is encoded as a JSON Pointer. We will come back to JSON Pointers in more detail in section~\ref{sec:json-pointers}.}, to combine multiple ‹get()› calls into a single function call. This call returns an ‹Option› to distinguish between ‹Null› values and lookup failure, but is otherwise quite similar.
+
+Neither of these approaches, nor the first approach with the individual ‹get()› calls actually gives us a number in the form of an integer, though. What we actually get is\footnote{Assuming the input was the string in listing~\ref{lst:json1}.} a ‹Value::Number(Number { ... })› which means that if we wanted to do something else than just printing it, our code would still have some unwrapping to do. And with all this, if we misspell a field, we may not even know that the code failed at runtime because of a typo and not some problem with the data.
+
 \subsubsection{Custom types}
 
-What we actually want are custom types, that accurately reflects the actual data. This way, any mismatches between our assumptions and the actual structure of the data is revealed at the time of parsing. And accessing any particular field is just as type-safe as any other native data in the programming language.
-
-Listing~\ref{lst:readjsonrs3} shows an example of using such custom data types with the «serde» framework. However, even for this small example this approach required 9 significant lines of code for the types. And with real-world data sources, actual JSON data can be significantly larger and more complex. So while custom types are preferable once written, actually writing them can often be a significant hurdle.
+What we actually want are custom types, that accurately reflects the actual data. This way, any mismatches between our assumptions and the actual structure of the data is revealed at the time of JSON parsing, and any misspelling of field names is discovered at program compile time.
 
 \begin{listing}[ht!]
 \begin{minted}{rust}
@@ -301,11 +371,14 @@ let parsed: Person = serde_json::from_str(json_str)?;
 
 println!("{}", parsed.phoneNumbers[0].areaCode);
 \end{minted}
-\caption{Printing the first areaCode in Rust}
+\caption{Printing the first areaCode in Rust using custom types}
 \label{lst:readjsonrs3}
 \end{listing}
 
+Listing~\ref{lst:readjsonrs3} shows an example of using such custom data types with the «serde» framework. However, even for this small example this approach required 9 significant lines of code for the types. And with real-world data sources, actual JSON data can be significantly larger and more complex. So while custom types are preferable once written, actually writing them can often be a significant hurdle.
+
 \section{Type providers}
+\label{sec:type-providers}
 
 Solving this problem is of course something that has been thought about before. F\# is an open source, statically typed, functional programming language for the Common Language Runtime with an ML-like surface syntax. In version 3.0 of F\# a concept called \say{type providers} was introduced.
 
