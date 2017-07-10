@@ -300,7 +300,7 @@ enum Value {
 \label{lst:valueenum}
 \end{listing}
 
-Listing~\ref{lst:valueenum} shows the Rust type ‹Value› from the library «serde_json». Any legal JSON can be encoded by this type. Similar types can be created in most programming languages. However, working with such types in a type-safe manner can be both tedious and error-prone. The code in listing~\ref{lst:readjsonrs1} does approximately the same thing as the code in listings~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy} using pattern matching. While the code is type-safe and will not fail at runtime, it is not particularly convenient.
+Listing~\ref{lst:valueenum} shows the Rust type ‹Value› from the library «serde_json». Any legal JSON can be encoded by this type. Similar types can be created in most programming languages. However, working with such types in a type-safe manner can be both tedious and error-prone. The code in listing~\ref{lst:readjsonrs1} does approximately the same thing as the code in listings~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy}, using pattern matching. While the code is type-safe and will not fail at runtime, it is not particularly convenient.
 
 \begin{listing}[ht!]
 \begin{minted}{rust}

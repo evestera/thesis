@@ -23,6 +23,7 @@
 
 \usepackage{amsfonts}
 \usepackage{amsmath}
+\usepackage{subdepth}
 
 \DeclareMathOperator{\shap}{vts}
 \DeclareMathOperator{\cfs}{cfs}
@@ -40,10 +41,12 @@
 % Double brackets and braces for shapes:
 % \vect{ expr }
 % \recd{ expr }
+% \tupl{ expr }
 
 \usepackage{stmaryrd}
 
 \newcommand\vect[1]{\llbracket #1 \rrbracket}
+\newcommand\tupl[1]{\langle\kern-0.25em\langle #1 \rangle\kern-0.25em\rangle}
 
 \usepackage{xparse}
 

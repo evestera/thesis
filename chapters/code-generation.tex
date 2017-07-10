@@ -47,10 +47,10 @@ With this change, a separate ‹null› shape, which the original algorithm has,
 \begin{align*}
 \shap(‹Null›)          &= ‹optional(›\bot‹)› \\
 \shap(‹Bool(›b‹)›)     &= ‹bool› \\
-\shap(‹Number(›n‹)›)   &= \left\{\begin{array}{ll}
+\shap(‹Number(›n‹)›)   &= \begin{cases}
   ‹int›   & \text{if } n \in \mathbb{Z} \\
   ‹float› & \text{otherwise}
-\end{array}\right.\\
+\end{cases}\\
 \shap(‹String(›s‹)›)   &= ‹string› \\
 \shap(‹Array(›[\omega_1, \cdots, \omega_n]‹)›) &= \vect{ \fold(\csh, \bot, [\shap(\omega_1), \cdots, \shap(\omega_n)]) } \\
 \shap(‹Object(›\{ k_1 : \omega_1, \cdots, k_n : \omega_n \}‹)›) &= \recd{ k_1 : \shap(\omega_1), \cdots, k_n : \shap(\omega_n) }
@@ -79,7 +79,7 @@ $\fold(\textit{function}, \textit{base}, \textit{sequence})$ is the fold operato
 \label{fig:csh}
 \end{figure}
 
-Figure~\ref{fig:csh} shows the function $\csh(\sigma_1, \sigma_2)$ which for two shapes finds a common shape which can represent both shapes.
+Figure~\ref{fig:csh} shows the function $\csh(\sigma_1, \sigma_2)$ which for two shapes finds a common shape which can represent both shapes. Order of arguments does not matter, so for every rule $\csh(a, b)$ the rule $\csh(b, a)$ is the same.
 
 \begin{figure}[ht!]
 \begin{align*}
@@ -95,11 +95,11 @@ Figure~\ref{fig:csh} shows the function $\csh(\sigma_1, \sigma_2)$ which for two
 \begin{gather*}
 \cfs(\sigma_1 = \recd{ k_1 : v_1, \cdots, k_n : v_n }, \sigma_2 = \recd{ k_1 : v'_1, \cdots, k_n : v'_n }) = \\
 \recd[\bigg]{
-\forall\ k_n \in \sigma_1 \cup \sigma_2 .\ k_n : \left( \begin{array}{ll}
+\forall\ k_n \in \sigma_1 \cup \sigma_2 .\ k_n : \begin{cases}
   \csh(v_n, v'_n) & \text{if } k_n \in \sigma_1 \cap \sigma_2 \\
   \opt(v_n) & \text{if } k_n \notin \sigma_2 \\
   \opt(v'_n) & \text{if } k_n \notin \sigma_1
-\end{array} \right)
+\end{cases}
 }
 \end{gather*}
 \caption{$\cfs(\sigma_1, \sigma_2)$, the function for finding the common shape of two records}
@@ -122,7 +122,11 @@ The code generation recursively matches on the types of the shape tree.
 
 Code is generated via quasiquotation, using the «quote» library.
 
+\subsection{Type and field names}
+
 % field and type naming and renaming
+
+\subsection{Creation of a runnable example}
 
 % runnable example
 
@@ -196,10 +200,15 @@ enum E {
 As have been mentioned earlier, there are several ways to extend this basic setup to better align with what handwritten code would look like. We will now look at a few such extensions. For the sake of simplicity, we will mostly not go into the details of how these extensions interact or the complete extended algorithms, focusing instead on each extension by itself.
 
 \subsection{Tagged any types}
+\label{sec:tagged-any}
 
 \placeholder{Describe (and maybe show) extension of inference to AnyOf / tagged any types.}
 
-% Unsigned numbers
+\subsection{Unsigned integers}
+\label{sec:unsigned}
+
+Rust supports unsigned integers. By default we do not infer unsigned integers because the risk/reward is just not good enough to justify it as a default. However, like $‹optional(›\vect{\sigma}‹)›$, an ‹unsigned› shape can just be inferred and not used unless configured.
+
 
 \subsection{JSON pointer hints and configuration}
 \label{sec:ext-json-pointers}
@@ -244,7 +253,7 @@ While the intention that an object is used as a map can not be directly inferred
 \label{fig:csh-map}
 \end{figure}
 
-To be able to infer maps we would first need to add $‹map(›\sigma‹)›$ as an alternative to our list of possible shapes. In the notation I have not included the key type, as JSON only supports string keys for object fields, and as such to assume strings as map keys in the generated code should suffice. Figure~\ref{fig:shap-map} shows how the function $\shap$ already extended with hints could be extended to infer maps. The shown rules should take priority over the existing rule matching on ‹Object›.
+To be able to infer maps we would first need to add $‹map(›\sigma‹)›$ as an alternative to our set of possible shapes. In the notation I have not included the key type, as JSON only supports string keys for object fields, and as such to assume strings as map keys in the generated code should suffice. Figure~\ref{fig:shap-map} shows how the function $\shap$ already extended with hints could be extended to infer maps. The shown rules should take priority over the existing rule matching on ‹Object›.
 
 % Values in a map are essentially already nullable.
 $\csh$ can be extended by adding a simple rule shown in figure~\ref{fig:csh-map} before the existing rule $(any)$. One may argue that map values are already nullable, since ‹map.get()› or any equivalent will return some nullable type, and that we should thus take care to not infer a shape for the map values which could be lowered to a non-nullable shape (or rather, to lower such types when we infer them).
@@ -265,8 +274,33 @@ For the default map type, whatever we choose ends up as essentially a new base t
 
 Another common pattern in JSON usage that the simple algorithm has quite poor support of is the use of JSON arrays as tuples.
 
-\placeholder{Inferring types from multiple samples/sample-sets but ensuring that they can still work together. Show how this can already be done to a certain extent using \url{https://github.com/lloydmeta/frunk}}
+\begin{figure}[ht!]
+\begin{gather*}
+\shap(‹Array(›[\omega_1, \cdots, \omega_n]‹)›) = \\ \begin{cases}
+  \tupl{ \shap(\omega_1), \cdots, \shap(\omega_n), 1 }   &  \text{if } 1 < n \leq tmax \\
+  \vect{ \fold(\csh, \bot, [\shap(\omega_1), \cdots, \shap(\omega_n)]) } & \text{otherwise}
+\end{cases}
+\end{gather*}
+\caption{$\shap(\omega)$, rule modification for tuples}
+\label{fig:shap-tuple}
+\end{figure}
+
+\begin{figure}[ht!]
+\begin{gather*}
+\csh(\tupl{ \sigma_1, \cdots, \sigma_n, \kappa_1 }, \tupl{ \sigma'_1, \cdots, \sigma'_m, \kappa_2 }) = \\
+\begin{cases}
+  \tupl{ \csh(\sigma_1, \sigma'_1), \cdots, \csh(\sigma_n, \sigma'_m), \kappa_1 + \kappa_2 }   &  \text{if } n = m \\
+  \vect{ \csh(\fold(\csh, \bot, [\sigma_1, \cdots, \sigma_n]), \fold(\csh, \bot, [\sigma_1, \cdots, \sigma_n])) } & \text{otherwise}
+\end{cases} \\
+\csh(\tupl{ \sigma_1, \cdots, \sigma_n, \kappa }, \vect{\sigma_m}) = \\
+\vect{\csh(\fold(\csh, \bot, [\sigma_1, \cdots, \sigma_n]), \sigma_m)}
+\end{gather*}
+\caption{$\csh(\sigma_1, \sigma_2)$, rule additions for tuples}
+\label{fig:csh-tuple}
+\end{figure}
 
 \subsection{Combining identical subtypes}
 
 Finding identical subtypes is the task of finding identical subtrees in our shape tree. A naive approach needs $\binom{n}{2} = \frac{n(n-1)}{2} \in O(n^2)$ comparisons, so care must be taken on implementation. Our shape tree can be considered to be a rooted unordered labelled tree. Finding identical types would still be somewhat useful even if we consider the tree ordered, so this could be done to make initial implementation easier.
+
+\placeholder{Inferring types from multiple samples/sample-sets but ensuring that they can still work together. Show how this can already be done to a certain extent using \url{https://github.com/lloydmeta/frunk}}
