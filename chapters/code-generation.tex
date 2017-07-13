@@ -215,7 +215,7 @@ Rust supports unsigned integers. By default we do not infer unsigned integers be
 
 As outlined in section~\ref{sec:json-pointers} we can use JSON pointers to specify configuration options and hints to the inference that are specific to just a part of the JSON sample.
 
-Actually applying these options and hints require (unsurprisingly) some modifications to the basic version of the algorithm.
+Actually applying these options and hints require some modifications to the basic version of the algorithm.
 
 % some in inference, some as intermediate steps, some for
 
@@ -226,7 +226,7 @@ Actually applying these options and hints require (unsurprisingly) some modifica
 \subsection{Maps}
 \label{sec:ext-maps}
 
-One common issue with JSON is that its simplicity in its number of data structures drives people to use the same data structures with different intentions as different ad-hoc data structures. Perhaps the most common such pattern is the use of JSON objects as maps.
+One common issue with JSON is that its simplicity means that some common data structures are missing. This drives people to use the same data structures with different intentions as different ad-hoc data structures. Perhaps the most common such pattern is the use of JSON objects as maps.
 
 % Should the concept of a map be explained?
 
@@ -262,7 +262,7 @@ However, the only nullable shape we currently have that can be lowered to someth
 
 In most programming languages there is also the consideration of which map type to use. The Rust standard library provides two map types, ‹HashMap› and ‹BTreeMap›. In addition to these alternatives there are various map types in published in crates in the Rust ecosystem. As an example, «json_typegen» itself uses a ‹LinkedHashMap› internally. From the perspective of a user, giving a hint $‹use_type›\ t$ should work with any of the types mentioned above for $t$, as well as just ‹map›, letting «json_typegen» choose the map type.
 
-For the default map type, whatever we choose ends up as essentially a new base type. Both ‹HashMap› and ‹BTreeMap› are good candidates, but as default I have chosen ‹HashMap›, as it is recommended when \say{You want a map, with no extra functionality}\cite[std::collections]{rust-std-docs}.
+For the default map type, whatever we choose ends up as essentially a new base type. Both ‹HashMap› and ‹BTreeMap› are good candidates, but as the default I have chosen ‹HashMap›, as it is the recommendation for general maps.\cite[std::collections]{rust-std-docs}. As mentioned, we assume strings as keys, so the full new base type is ‹HashMap<String, T›. With ‹String› fixed as the key type, ‹HashMap› implements all the traits in our derive list and can thus be safely added to our set of base types.
 
 % Whatever type json_typegen chooses ends up as part of our base types.
 % HashMap<String, T> implements all of Default, Debug, Clone, PartialEq, Serialize, Deserialize
@@ -272,7 +272,7 @@ For the default map type, whatever we choose ends up as essentially a new base t
 \subsection{Tuple types}
 \label{sec:ext-tuples}
 
-Another common pattern in JSON usage that the simple algorithm has quite poor support of is the use of JSON arrays as tuples.
+Another common pattern of data structure adaption in real world JSON is the use of arrays as tuples. E.g. serializing the tuple ‹("a", 1)› as the JSON text ‹["a", 1]›. Unfortunately, this does not interact very well with the basic algorithm. The JSON text ‹["a", 1]› would be inferred as the shape $\vect{‹any›}$. Rust does, however, have tuples, and could represent the type as ‹(String, i64)›, so if it is possible to do so without breaking the original algorithm it makes sense to try to infer tuples.
 
 \begin{figure}[ht!]
 \begin{gather*}
@@ -284,6 +284,10 @@ Another common pattern in JSON usage that the simple algorithm has quite poor su
 \caption{$\shap(\omega)$, rule modification for tuples}
 \label{fig:shap-tuple}
 \end{figure}
+
+To be able to infer tuples we add the tuple shape $\tupl{ \sigma_1, \cdots, \sigma_n, \kappa }$ to our set of shapes, where $ \sigma_1, \cdots, \sigma_n $ are field shapes and $\kappa$ is the count of samples this shape is based on. Figure~\ref{fig:shap-tuple} shows how $\shap(\omega)$ can be modified to infer tuples. The shown rule replaces the original rule for ‹Array›.
+
+A tuple automatically implements all the traits in our default derive list if all the types inside it does\cite[primitive std::tuple]{rust-std-docs}, and so can be safely added to our set of base types. This derive-like functionality only works for tuples with at most 12 fields, so the max inferred tuple arity -- $tmax$ -- should never be set higher than this. In my own opinion, anything beyond 2-tuples and 3-tuples should not be automatically inferred.
 
 \begin{figure}[ht!]
 \begin{gather*}
@@ -298,6 +302,26 @@ Another common pattern in JSON usage that the simple algorithm has quite poor su
 \caption{$\csh(\sigma_1, \sigma_2)$, rule additions for tuples}
 \label{fig:csh-tuple}
 \end{figure}
+
+Figure~\ref{fig:csh-tuple} shows how $\csh(\sigma_1, \sigma_2)$ can be extended to accommodate for tuples. The two rules are pure additions, and none of the original rules are affected.
+
+% [1, 2] => [int]
+% [[1, 2], [3, 4]] => [(int, int)]
+% [1, "foo"] => (int, string)
+
+\begin{figure}[ht!]
+\begin{gather*}
+\text{tolist}(\tupl{ \sigma_1, \cdots, \sigma_n, \kappa }) = \vect{\fold(\csh, \bot, [\sigma_1, \cdots, \sigma_n])} \\ \\
+\text{test}(\sigma_t = \tupl{ \sigma_1, \cdots, \sigma_n, \kappa })  = \\
+\kappa \geq tsamplemin \lor ((\exists \sigma \in [\sigma_1, \cdots, \sigma_n] . \sigma \neq ‹any›) \land \text{tolist}(\sigma_t) = \vect{‹any›})
+\end{gather*}
+\caption{Removal of tuple shapes}
+\label{fig:remove-tuple}
+\end{figure}
+
+When we add tuples to the inference, while some tuples can be inferred automatically, our code generation should not be \emph{too} eager to use tuples. We do not want every short list in our samples to be interpreted as a tuple. Figure~\ref{fig:remove-tuple} shows how tuple shapes can be converted to lists, and the test for whether a tuple shape should be used or converted to a list shape. Intuitively, a tuple shape should only be used if we have either seen enough instances to believe it is not just a short list, or if the use of a tuple type will prevent us from combining shapes into the fallback shape ‹any›. Note that the clause $(\exists \sigma \in [\sigma_1, \cdots, \sigma_n] . \sigma \neq ‹any›)$ will be redundant if we consider 2 to be enough samples to use a tuple.
+
+If automatic inference of tuples is disabled, tuple shapes can still be created, and every tuple shape encountered in code generation can be converted to a list unless locally enabled by pointer configuration.
 
 \subsection{Combining identical subtypes}
 
