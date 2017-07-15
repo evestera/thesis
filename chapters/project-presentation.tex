@@ -305,7 +305,7 @@ In such cases where the generated code falls short the programmer has a few alte
 
 \begin{itemize}
   \item They can simply use the generated code as is, and convert from ‹String› to ‹Date› as necessary. If the suboptimal type is used frequently in the code though, littering the code with snippets like ‹Date::from(order.registered)› becomes frustrating pretty fast.
-  \item They can customize the generated code by hand, and reapply the customizations whenever the code has to be generated again. Since this requires access to the generated code this alternative means abandoning any procedural macro or type provider. As it also makes the customized code incompatible with the generated code conditional compilation will not help here either.
+  \item They can customize the generated code by hand, and reapply the customizations whenever the code has to be generated again. Since this requires access to the generated code this alternative means abandoning any procedural macro or type provider. As it also makes the customized code incompatible with the generated code, conditional compilation will not help here either.
   \item Finally, they can customize the generated code by hand, and completely abandon the code generation tool.
 \end{itemize}
 
@@ -413,13 +413,33 @@ In the example, we would want to target \say{the field ‹registered› of the r
 
 The JSON Pointer specification\cite{RFC6901} was originally developed along with the specification for JSON Patch\cite{RFC6902} for the HTTP PATCH method, which needed a way to specify specific elements of a JSON document. A JSON pointer is simply a string consisting of \say{reference tokens} each prefixed with a forward slash (to separate the tokens). A reference token is interpreted as either a field name or an array index, depending on whether an object or an array is encountered. So to specify \say{the field ‹registered› of the root object} we would write the JSON pointer ‹"/registered"›. And the JSON pointer we used in section~\ref{sec:json} to extract \say{the field ‹areaCode› of the first element of the ‹phoneNumbers› field of the root object} was ‹"/phoneNumbers/0/areaCode"›.
 
-Since JSON pointers are representable as simple strings they are easy to use as arguments to both macros or in command line invocations. Since they are already used by «serde_json» it also makes sense to use JSON pointers rather than introduce yet another way to reference data originating from JSON.
+Since JSON pointers are representable as simple strings they are easy to use as arguments to both macros or in command line invocations. Since they are already used by «serde_json» it also makes sense to use JSON pointers rather than introduce a completely new way to reference data originating from JSON.
+
+\begin{listing}[ht!]
+\begin{minted}{rust}
+json_typegen!("Order", "samples/order.json", {
+    "/registered": {
+        use_type: "Date",
+    },
+});
+\end{minted}
+\caption{Macro invocation with JSON pointer configuration}
+\label{lst:macro-with-json-pointer}
+\end{listing}
+
+Listing~\ref{lst:macro-with-json-pointer} shows how a macro invocation with an option specified with a pointer could look. So far there are three options specified via pointers I have planned:
+
+\begin{itemize}
+  \item ‹use_type›, which specifies a type for the code generation to use, with varying levels of specificity.
+  \item ‹same_as›, which specifies that the type of one part of a JSON document should be inferred to the same type as another part.
+  \item ‹type_name›, which gives a type name for the code generation to use when generating the types.
+\end{itemize}
+
+In section~\ref{sec:ext-json-pointers} we will look at how the addition of these options, and JSON pointers in general, affect the logic behind the code generation.
 
 As JSON pointers are a \say{stringly typed} way to talk about data, it may seem strange to use them in a project that is so focused on type safety. There is, however, a significant distinction in using such code at compile time and at runtime. The criticism of \say{stringly typed} code in a strongly typed language is that it ends up reverting to a state where errors are discovered at runtime. If configuration for «json_typegen» specified through a JSON pointer does not apply to any of the sample, this can be known well before runtime, when generating the code (i.e. at compile time for the macro), and a warning or an error can be shown to the user at that point in time.
 
-\placeholder{Actually show some examples of using JSON pointers for configuration}
-
-Due to the use case the JSON pointer specification was developed for, there is however a rather glaring omission when it comes to adapting it to our use case. The complete lack of any wildcard.
+Due to the original use case the JSON pointer specification was developed for, the specification only specifies how to target single elements in JSON documents. There is no wildcard for e.g. specifying every field in an object, or every element in an array. While wildcards adds some complexity to implementation, it is still something that can be quite useful for our use case. For arrays\footnote{And with extensions, other collections.} wildcards may however not be needed, as any option applied to one element will, due to how the inference works, be applied to all of them.
 
 % TODO: Existing solutions to lack of wildcard
 
