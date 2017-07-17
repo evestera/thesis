@@ -82,6 +82,63 @@ $\fold(\textit{function}, \textit{base}, \textit{sequence})$ is the fold operato
 Sometimes multiple elements must be represented by the same shape, e.g. a single shape representing all the elements of an array. Figure~\ref{fig:csh} shows the function $\csh(\sigma_1, \sigma_2)$ which for two shapes finds a common shape which can represent them both. Order of arguments does not matter, so for every rule $\csh(a, b)$ the rule $\csh(b, a)$ is the same.
 
 \begin{figure}[ht!]
+\vspace{2mm}
+\centering
+\begin{tikzpicture}[>=stealth, thick, shorten >=1pt, auto, scale=1.2]
+  \node (bot)     at (8,0) {\bot};
+  \node (bot?)    at (9,1) {\bot?};
+  \node (int)     at (0,2) {‹int›};
+  \node (int?)    at (1,3) {‹int›?};
+  \node (float)   at (0,4) {‹float›};
+  \node (float?)  at (1,5) {‹float›?};
+  \node (bool)    at (2,2) {‹bool›};
+  \node (bool?)   at (3,3) {‹bool›?};
+  \node (string)  at (4,2) {‹string›};
+  \node (string?) at (5,3) {‹string›?};
+  \node (arr)     at (6,2) {$\vect{\sigma}$};
+  \node (arr?)    at (7,3) {$\vect{\sigma}$?};
+  \node (obj)     at (8,2) {$\recd{\cdots}$};
+  \node (obj?)    at (9,3) {$\recd{\cdots}$?};
+  \node (any)     at (9,6) {‹any›};
+
+  \begin{scope}[on background layer]
+    \path[->] (bot)    edge (bot?);
+    \path[->] (int)    edge (int?);
+    \path[->] (float)  edge (float?);
+    \path[->] (bool)   edge (bool?);
+    \path[->] (string) edge (string?);
+    \path[->] (arr)    edge (arr?);
+    \path[->] (obj)    edge (obj?);
+
+    \path[]   (bot)    edge (0,0);
+    \path[->] (0,0)    edge (int);
+    \path[->] (2,0)    edge (bool);
+    \path[->] (4,0)    edge (string);
+    \path[->] (6,0)    edge (arr);
+    \path[->] (bot)    edge (obj);
+    \path[->] (int)    edge (float);
+
+    \path[    dashed] (bot?) edge (1,1);
+    \path[->, dashed] (1,1)  edge (int?);
+    \path[->, dashed] (3,1)  edge (bool?);
+    \path[->, dashed] (5,1)  edge (string?);
+    \path[->, dashed] (7,1)  edge (arr?);
+    \path[->, dashed] (bot?) edge (obj?);
+    \path[->, dashed] (int?) edge (float?);
+
+    \path[]   (float?)  edge (9,5);
+    \path[]   (bool?)   edge (3,5);
+    \path[]   (string?) edge (5,5);
+    \path[]   (arr?)    edge (7,5);
+    \path[->] (obj?)    edge (any);
+  \end{scope}
+\end{tikzpicture}
+\vspace{2mm}
+\caption{Hasse diagram for the partial order. For compactness $\sigma$? is used for $‹optional(›\sigma‹)›$. Dashed lines are only for visual clarity.}
+\label{fig:poset}
+\end{figure}
+
+\begin{figure}[ht!]
 \begin{align*}
 \opt(‹any›)                &= ‹any› \\
 \opt(‹optional(›\sigma‹)›) &= ‹optional(›\sigma‹)› \\
