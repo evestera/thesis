@@ -79,7 +79,7 @@ $\fold(\textit{function}, \textit{base}, \textit{sequence})$ is the fold operato
 \label{fig:csh}
 \end{figure}
 
-Figure~\ref{fig:csh} shows the function $\csh(\sigma_1, \sigma_2)$ which for two shapes finds a common shape which can represent both shapes. Order of arguments does not matter, so for every rule $\csh(a, b)$ the rule $\csh(b, a)$ is the same.
+Sometimes multiple elements must be represented by the same shape, e.g. a single shape representing all the elements of an array. Figure~\ref{fig:csh} shows the function $\csh(\sigma_1, \sigma_2)$ which for two shapes finds a common shape which can represent them both. Order of arguments does not matter, so for every rule $\csh(a, b)$ the rule $\csh(b, a)$ is the same.
 
 \begin{figure}[ht!]
 \begin{align*}
@@ -116,19 +116,52 @@ We will look at these extensions and their consequences for the algorithm in sec
 
 \section{Generating Rust types}
 
-Once a shape tree has been inferred from the sample and intermediate passes have been run to improve the inferred shapes the shape tree is used to generate Rust code.
+Once a shape tree has been inferred from the sample and intermediate passes have been run to improve the inferred shapes, the shape tree is used to generate Rust code.
 
-The code generation recursively matches on the types of the shape tree.
+The main function takes as its input some path information, used for naming any generated types, and a shape. The function pattern matches on the shape and produces as its output a tuple: The name of the type representing the shape, and potentially some code generated to declare the returned type.
 
-Code is generated via quasiquotation, using the «quote» library.
+Code is generated via quasiquotation, using a macro ‹quote!› from the «quote» library.
 
 \subsection{Type and field names}
 
-% field and type naming and renaming
+Up to the point of code generation, JSON field names have been preserved as they were in the original JSON. These field names are used to create both field names for the generated types, as well as type names for any nested types. However, as mentioned in section~\ref{sec:json}, the JSON field names can be completely arbitrary strings, while the field names and type names we generated must conform to Rust rules and conventions for identifiers.
+
+The generated names are restricted to consist of \say{words} of alphanumeric ASCII characters, and the complete name must start with a letter. Type names are \say{pascal-cased}, i.e. concatenated, with the first letter of each word upper-cased, and field names are \say{snake-cased}, i.e. all lower case, with words separated by an underscore. For some fields, nothing of the original name remains after restrictions are applied, and we have to resort to fallback names like ‹GeneratedType›.
+
+\begin{listing}[ht!]
+\textbf{Sample:}
+\begin{minted}{json}
+{
+  "one two": { " ": 5, "?": 2 }
+}
+\end{minted}
+\vspace{5mm}
+
+\textbf{Generated types:}
+\begin{minted}{rust}
+struct Root {
+    #[serde(rename = "one two")]
+    one_two: OneTwo,
+}
+
+struct OneTwo {
+    #[serde(rename = " ")]
+    field: i64,
+    #[serde(rename = "?")]
+    field2: i64,
+}
+\end{minted}
+\caption{Field and type renaming}
+\label{lst:names}
+\end{listing}
+
+Additionally the generated types cannot collide with Rust keywords or each other. Collisions with keywords are solved with appending a word describing its use, like ‹field›, so the field ‹"type"› becomes ‹type_field›. Collisions between generated names are solved by adding an incrementing counter to the name.
+
+For field names, if the Rust field name does not match the JSON field name an annotation to relay this information to «Serde» is added to the field. Listing~\ref{lst:names} shows an example with several of these issues at once.
 
 \subsection{Creation of a runnable example}
 
-% runnable example
+In addition to just generating the types themselves, the code generation can also generate an example of how to use the types, including a main function and the necessary imports.
 
 \subsection{Use of derivable traits}
 \label{sec:use-of-derivable-traits}
