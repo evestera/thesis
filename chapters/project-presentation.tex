@@ -496,7 +496,7 @@ If the web interface additionally can output in the macro syntax we get easy tra
 \label{fig:transitions}
 \end{figure}
 
-The way I've described how the procedural macros work in section~\ref{sec:shared-code} it may seem like we could get at least parsing of the macro \say{for free}. Unfortunately, this is currently not the case. Since the current macro is not a procedural macro, we do not ever use the macro code itself as input, but rather what it expands to. However, any parsing code written for configuration interchange may very well be directly usable once normal procedural macros are available on the stable compiler and it is time to transition the «json_typegen» macro.
+The way I've described how the procedural macros work in section~\ref{sec:shared-code} it may seem like we could get at least parsing of the macro \say{for free}. Unfortunately, this is currently not the case. Since the current macro is not a procedural macro, we do not ever use the macro code itself as input, but rather what it expands to. However, any parsing code written for configuration interchange may very well be directly usable once normal procedural macros are available on the stable compiler and it is time to transition the «json_typegen» macro.\footnote{I am also considering a refactor of the macro part of the project before then, which might enable the use of the macro input more directly by itself.}
 
 % Easy way to transition between interfaces. E.g. copy-paste macro into web interface to see result. Output macro in web interface that is equivalent to the current form input. Etc.
 % Doing this would mean essentially writing a minimal macro parser and generator. I.e.

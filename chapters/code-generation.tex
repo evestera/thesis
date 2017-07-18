@@ -81,6 +81,8 @@ $\fold(\textit{function}, \textit{base}, \textit{sequence})$ is the fold operato
 
 Sometimes multiple elements must be represented by the same shape, e.g. a single shape representing all the elements of an array. Figure~\ref{fig:csh} shows the function $\csh(\sigma_1, \sigma_2)$ which for two shapes finds a common shape which can represent them both. Order of arguments does not matter, so for every rule $\csh(a, b)$ the rule $\csh(b, a)$ is the same.
 
+$\csh(\sigma_1, \sigma_2)$ defines a partial order for the set of shapes, where if $\csh(\sigma_1, \sigma_2) = \sigma_3$, $\sigma_1 \sqsubseteq \sigma_3$ and $\sigma_2 \sqsubseteq \sigma_3$. The relation $\sqsubseteq$ can be understood as the \say{can be represented by}-relation. E.g. $ ‹float› \not\sqsubseteq ‹int› $, but $ ‹int› \sqsubseteq ‹float› $ (and also $ ‹int› \sqsubseteq ‹int› $).
+
 \begin{figure}[ht!]
 \vspace{2mm}
 \centering
@@ -138,6 +140,8 @@ Sometimes multiple elements must be represented by the same shape, e.g. a single
 \label{fig:poset}
 \end{figure}
 
+Figure~\ref{fig:poset} shows an incomplete Hasse diagram for the partially ordered set given by $\sqsubseteq$ on the set of shapes. The internal ordering of $\vect{\sigma}$ (list) and $\recd{\cdots}$ (record) shapes are not shown.
+
 \begin{figure}[ht!]
 \begin{align*}
 \opt(‹any›)                &= ‹any› \\
@@ -163,7 +167,7 @@ Sometimes multiple elements must be represented by the same shape, e.g. a single
 \label{fig:cfs}
 \end{figure}
 
-Figure~\ref{fig:cfs} shows how the common shape of two record shapes is found by finding the common shapes of its fields. For keys that are not present in both records, the shape that is present is optional/nullable. Note that in «Types from Data», records have row variables\cite{row-types} so that all records can be considered to have the same keys. To minimize the number of new concepts needed to understand the basic algorithm I have chosen this slightly less elegant notation in figure~\ref{fig:cfs} instead.
+Figure~\ref{fig:cfs} shows how the common shape of two record shapes is found by finding the common shapes of its fields. For keys that are not present in both records, the shape that is present is optional/nullable. Note that in «Types from Data», records have row variables\cite{row-types} so that all records can be considered to have the same keys. To minimize the number of new concepts needed to understand the basic algorithm I have chosen this slightly less elegant notation in figure~\ref{fig:cfs} instead. Informally, every key present in either of the input record shapes will be present in the output record shape. For every field, if the field is found in both record shapes, the shape of the field in the output is the common shape of the shapes for the corresponding fields in the input. If the field is found in only one of the input shapes, the corresponding field in the output shape must be optional.
 
 \section{Intermediary passes}
 
@@ -292,7 +296,9 @@ As have been mentioned earlier, there are several ways to extend this basic setu
 \subsection{Tagged any types}
 \label{sec:tagged-any}
 
-\placeholder{Describe (and maybe show) extension of inference to AnyOf / tagged any types.}
+In addition to the basic inference algorithm described in section~\ref{sec:shape-inference} «Types From Data»\cite{fsharp-types-from-data} also describes an extension it calls \say{labelled top shapes} for providing a better fallback than the general ‹any› shape.
+
+In the basic algorithm, if the least upper bound given by $\csh(\sigma_1, \sigma_2)$ is ‹any›, we throw away the information we have about why we had to use ‹any›, i.e. $\sigma_1$ and $\sigma_2$. The basic concept of this extension is to instead incorporate this information into a top type $‹anyof(›\sigma_1, \cdots, \sigma_n‹)›$. This can then be used in the code generation to e.g. create enumerated types with custom types inside.
 
 \subsection{Unsigned integers}
 \label{sec:unsigned}
