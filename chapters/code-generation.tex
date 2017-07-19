@@ -296,9 +296,9 @@ As have been mentioned earlier, there are several ways to extend this basic setu
 \subsection{Tagged any types}
 \label{sec:tagged-any}
 
-In addition to the basic inference algorithm described in section~\ref{sec:shape-inference} «Types From Data»\cite{fsharp-types-from-data} also describes an extension it calls \say{labelled top shapes} for providing a better fallback than the general ‹any› shape.
+In addition to the basic inference algorithm described in section~\ref{sec:shape-inference}, «Types From Data»\cite{fsharp-types-from-data} also describes an extension it calls \say{labelled top shapes} for providing a better fallback than the general ‹any› shape.
 
-In the basic algorithm, if the least upper bound given by $\csh(\sigma_1, \sigma_2)$ is ‹any›, we throw away the information we have about why we had to use ‹any›, i.e. $\sigma_1$ and $\sigma_2$. The basic concept of this extension is to instead incorporate this information into a top type $‹anyof(›\sigma_1, \cdots, \sigma_n‹)›$. This can then be used in the code generation to e.g. create enumerated types with custom types inside.
+In the basic algorithm, if the least upper bound given by $\csh(\sigma_1, \sigma_2)$ is ‹any›, we throw away the information we have about why we had to use ‹any›, i.e. $\sigma_1$ and $\sigma_2$. The basic concept of this extension is to instead incorporate this information into a top type $‹anyof(›\sigma_1, {\cdots}, \sigma_n‹)›$. This can then be used in the code generation to e.g. create enumerated types with custom types inside.
 
 \subsection{Unsigned integers}
 \label{sec:unsigned}
