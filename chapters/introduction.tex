@@ -277,11 +277,11 @@ For my examples I will use Rust, but first I need to introduce «Serde»:
 \subsubsection{Serde}
 \label{sec:serde}
 
-«Serde» is a Rust framework for serialization and deserialization. The core of the framework is independent of the source/target data format, and the input/output of specific data formats is provided by separate crates.
+«Serde»\cite{serde} is a Rust framework for serialization and deserialization. The core of the framework is independent of the source/target data format, and the input/output of specific data formats is provided by separate crates.
 
 «Serde» works by providing two traits, ‹Serialize› and ‹Deserialize›, that Rust types can implement. The core library has already implemented these traits for the most common data types like ‹i64›, ‹String›, ‹Vec› and ‹HashMap›. In addition, the crate «serde_derive» provides code for deriving ‹Serialize› and ‹Deserialize› for custom -- i.e. your own -- types.
 
-Once a Rust type implements the necessary trait, data can be converted with the various format specific crates, that provide implementations for one or both of the traits «Serializer» and «Deserializer». «serde_json» provides implementations of these types for JSON. It also provides some other functionality that is useful for working with JSON.
+Once a Rust type implements the necessary trait, data can be converted with the various format specific crates, that provide implementations for one or both of the traits «Serializer» and «Deserializer». «serde_json»\cite{serdejson} provides implementations of these types for JSON. It also provides some other functionality that is useful for working with JSON.
 
 \subsubsection{Catchall types}
 

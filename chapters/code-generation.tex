@@ -18,7 +18,7 @@ First I will present the basic version of the inference algorithm and code gener
 
 The shape inference is based on the algorithms used in \fsharpdata\ as presented in the paper \emph{Types from Data: Making Structured Data First-class Citizens in F\#}\cite{fsharp-types-from-data}. As done in this paper I will use the term shape for the intermediate representation of the inference data, to avoid confusion with actual programming language types.
 
-The goal of the shape inference is to infer generalized shapes from the samples which can then later be used for generating code. These shapes are intended to be general enough to not be tied to inference from JSON -- \fsharpdata\ also does inference for CSV and XML -- and not tied to the generation of any particular type of programming language.
+The goal of the shape inference is to infer generalized shapes from the samples which can then later be used for generating code. These shapes are intended to be general enough to not be tied to inference from JSON -- \fsharpdata\ also does inference for CSV and XML -- and not tied to the generation of any particular type of programming language. Rust code for the basic version of the shape inference can be seen in appendix~\ref{app:inference-code}.
 
 \subsection{Values and shapes}
 
@@ -140,7 +140,7 @@ $\csh(\sigma_1, \sigma_2)$ defines a partial order for the set of shapes, where 
 \label{fig:poset}
 \end{figure}
 
-Figure~\ref{fig:poset} shows an incomplete Hasse diagram for the partially ordered set given by $\sqsubseteq$ on the set of shapes. The internal ordering of $\vect{\sigma}$ (list) and $\recd{\cdots}$ (record) shapes are not shown.
+Figure~\ref{fig:poset} shows an incomplete Hasse diagram for the partially ordered set given by $\sqsubseteq$ on the set of shapes. The internal ordering of $\vect{\sigma}$ (list) and $\recd{\cdots}$ (record) shapes is not shown.
 
 \begin{figure}[ht!]
 \begin{align*}
@@ -151,6 +151,8 @@ Figure~\ref{fig:poset} shows an incomplete Hasse diagram for the partially order
 \caption{$\opt(\sigma)$, the function ensuring optionality/nullability of shapes}
 \label{fig:opt}
 \end{figure}
+
+When we are working with optional shapes, we want optionality to be a boolean property, i.e. either something is optional, or it is not. For any shape $\sigma$ that already encodes the possibility of values that are missing or ‹null›, $\opt(\sigma)$, as shown in figure~\ref{fig:opt}, is simply a no-op.
 
 \begin{figure}[ht!]
 \begin{gather*}
@@ -187,7 +189,7 @@ Code is generated via quasiquotation, using a macro ‹quote!› from the «quot
 
 Up to the point of code generation, JSON field names have been preserved as they were in the original JSON. These field names are used to create both field names for the generated types, as well as type names for any nested types. However, as mentioned in section~\ref{sec:json}, the JSON field names can be completely arbitrary strings, while the field names and type names we generated must conform to Rust rules and conventions for identifiers.
 
-The generated names are restricted to consist of \say{words} of alphanumeric ASCII characters, and the complete name must start with a letter. Type names are \say{pascal-cased}, i.e. concatenated, with the first letter of each word upper-cased, and field names are \say{snake-cased}, i.e. all lower case, with words separated by an underscore. For some fields, nothing of the original name remains after restrictions are applied, and we have to resort to fallback names like ‹GeneratedType›.
+The generated names are restricted to consist of \say{words} of alphanumeric ASCII characters, and the complete name must start with a letter. Type names are \say{PascalCased}, i.e. concatenated, with the first letter of each word upper-cased, and field names are \say{snake\_cased}, i.e. all lower case, with words separated by an underscore. For some fields, nothing of the original name remains after restrictions are applied, and we have to resort to fallback names like ‹GeneratedType›.
 
 \begin{listing}[ht!]
 \textbf{Sample:}
@@ -216,13 +218,15 @@ struct OneTwo {
 \label{lst:names}
 \end{listing}
 
-Additionally the generated types cannot collide with Rust keywords or each other. Collisions with keywords are solved with appending a word describing its use, like ‹field›, so the field ‹"type"› becomes ‹type_field›. Collisions between generated names are solved by adding an incrementing counter to the name.
+Additionally the generated types cannot collide with Rust keywords or each other. Collisions with keywords are solved by appending a word describing its use, like ‹field›, so the field ‹"type"› becomes ‹type_field›. Collisions between generated names are solved by adding an incrementing counter to the name.
 
 For field names, if the Rust field name does not match the JSON field name an annotation to relay this information to «Serde» is added to the field. Listing~\ref{lst:names} shows an example with several of these issues at once.
 
-\subsection{Creation of a runnable example}
+\subsection{Generation of a runnable program}
 
-In addition to just generating the types themselves, the code generation can also generate an example of how to use the types, including a main function and the necessary imports.
+In addition to just generating the types themselves, the code generation can also generate a complete, runnable Rust program. In addition to the generated types, the runnable program contains the necessary imports and a main function showing how to use «serde_json» to deserialize and serialize into the generated types.
+
+The generation of a full program is mainly for documentation and demonstration purposes in the web interface. Using a button in the web interface the generated code can then be directly compiled and run in the online Rust playground.
 
 \subsection{Use of derivable traits}
 \label{sec:use-of-derivable-traits}
@@ -311,7 +315,7 @@ Rust supports unsigned integers. By default we do not infer unsigned integers be
 
 As outlined in section~\ref{sec:json-pointers} we can use JSON pointers to specify configuration options and hints to the inference that are specific to just a part of the JSON sample.
 
-Actually applying these options and hints require some modifications to the basic version of the algorithm.
+Actually applying these options and hints require some modifications to the basic version of the algorithm. Some have to be applied during inference, some are best applied as intermediate transformations between inference and code generation, and some have to be applied during the code generation.
 
 % some in inference, some as intermediate steps, some for
 
