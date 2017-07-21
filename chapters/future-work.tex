@@ -2,6 +2,11 @@
 
 \chapter{Future work}
 
+\begin{picture}(0,0)
+\put(190,50){\hbox{\includegraphics[width=5cm, angle=0, trim=20 20 20 20, clip]{ferris/longlist}}}
+\end{picture}
+\vspace{-1cm}
+
 In this thesis project I have thus far only implemented code generation for JSON. The library \fsharpdata\footnote{\url{http://fsharp.github.io/FSharp.Data/}} has type providers for JSON, CSV, HTML and XML. Like \fsharpdata, the code generation in my project is generic over inferred types. Thus, writing similar projects in Rust for other data formats should be able to reuse large amounts of the code I have written. Considering the benefits and added complexity of multiple interfaces I do not think a single project like \fsharpdata\ is the right approach for an extension of my code.
 
 \fsharpdata\ supports a solution for heterogeneous collections to avoid inferring any types for some cases. I have not implemented this functionality (or tagged any-types). Such functionality would be very useful in certain specific cases. A possible way to introduce this functionality while not coming into conflict with «Serde» would be to use enums for tagged any-types along with simple helper functions using ‹filter_map›.

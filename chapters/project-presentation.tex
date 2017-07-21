@@ -3,6 +3,11 @@
 \chapter{Presentation of the project}
 \label{chap:project-presentation}
 
+\begin{picture}(0,0)
+\put(140,100){\hbox{\includegraphics[width=5cm, angle=-5, trim=4 4 4 4, clip]{ferris/banner}}}
+\end{picture}
+\vspace{-1cm}
+
 Type providers have significant benefits that are worth exploring in other programming languages like Rust. Inspired by \fsharpdata\ I have created a project, «json_typegen», that aims to approximate the benefits of type providers in Rust. In particular I have focused on {\fsharpdata}s type provider for JSON, ‹JsonProvider›.
 
 The «json_typegen» project is divided into five crates, as well as a crate demonstrating the use of the main crate. Most important of these are one library -- a procedural macro -- and two binaries -- a command-line interface and a web interface. Figure~\ref{fig:crates} shows how the crates depend on each other.
