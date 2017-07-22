@@ -16,7 +16,7 @@ Once a JSON sample has been retrieved and parsed using «serde_json» into the c
   \item Finally, Rust code is generated based on the inferred shapes.
 \end{itemize}
 
-First I will present the basic version of the inference algorithm and code generation, before looking at how this basic system can be extended in various ways.
+To begin with I will present a basic version of the inference algorithm and code generation, before looking at how this system can be extended in various ways.
 
 \section{Shape inference}
 \label{sec:shape-inference}
@@ -37,12 +37,12 @@ The inference thus works with two types. The JSON sample, in our case parsed int
        \mid &\ ‹optional(›\sigma‹)› \mid \vect{\sigma} \mid \recd{ k_1 : \sigma_1, \cdots, k_n : \sigma_n }
 \end{align*}
 
-To be clear about how notation is disambiguated: $[a, b, c]$ is an actual sequence of items, while $\vect{a}$ is the \emph{shape} representing a sequence/list. Likewise $\{ k_1 : v_1, \cdots, k_n : v_n \}$ is a map-like collection, while $\recd{ k_1 : \sigma_1, \cdots, k_n : \sigma_n }$ is the \emph{shape} representing a record/object/struct.
+To be clear about how notation is disambiguated: $[a, b, c]$ is an actual sequence of items, while $\vect{a}$ is the \emph{shape} representing a sequence/list.\footnote{In «Types from Data» the notation $\vect{a}$ is used for a different purpose in a section of the paper we will not look at here.} Likewise $\{ k_1 : v_1, \cdots, k_n : v_n \}$ is a map-like collection, while $\recd{ k_1 : \sigma_1, \cdots, k_n : \sigma_n }$ is the \emph{shape} representing a record/object/struct.
 
 For an intuitive understanding of the more abstract shapes it is helpful to think of what kind of knowledge each shape represents. $\bot$ (read as \say{bottom}) represents the complete lack of knowledge about what type should be inferred. $‹optional(›\sigma‹)›$ represents the knowledge that a type may sometimes be ‹null› or a field may not always be there, i.e. that it is nullable or optional. So $‹optional(›\bot‹)›$ tells us that a type is optional, but that we know nothing else of about its type. The ‹any› shape, on the other hand, represents conflicting information. If we end up with the ‹any› shape it means that the information we have received is not representable by any of the other alternatives. E.g. a type that can be both a ‹string› and an ‹int›.
 
 % Differences from algorithm as presented in Types from Data
-Unlike in «Types from Data», to preserve information and let the choice be made in the code generation step, lists\footnote{\ldots\ and with extensions, other collections.} are not considered nullable. In other words, the inference can infer the shape $‹optional(›\vect{\sigma}‹)›$, but it is up to the code generation to decide how to handle the shape. In the default code generation, ‹Option<Vec<T>>› will not be generated, but this can be enabled by configuration (‹optional_collections›).
+Unlike in «Types from Data», to preserve information and let any choice be made in the code generation step, lists\footnote{\ldots\ and with extensions, other collections.} are not considered nullable. In other words, the inference can infer the shape $‹optional(›\vect{\sigma}‹)›$, but it is up to the code generation to decide how to handle the shape. In the default code generation, ‹Option<Vec<T>>› will not be generated, but this can be enabled by configuration (‹optional_collections›).
 
 With this change, a separate ‹null› shape, which the original algorithm has, is no longer necessary. Instead, $\bot$ is not considered nullable either, and $‹optional(›\bot‹)›$ serves the purpose of ‹null›.
 
@@ -86,7 +86,7 @@ $\fold(\textit{function}, \textit{base}, \textit{sequence})$ is the fold operato
 
 Sometimes multiple elements must be represented by the same shape, e.g. a single shape representing all the elements of an array. Figure~\ref{fig:csh} shows the function $\csh(\sigma_1, \sigma_2)$ which for two shapes finds a common shape which can represent them both. Order of arguments does not matter, so for every rule $\csh(a, b)$ the rule $\csh(b, a)$ is the same.
 
-$\csh(\sigma_1, \sigma_2)$ defines a partial order for the set of shapes, where if $\csh(\sigma_1, \sigma_2) = \sigma_3$, $\sigma_1 \sqsubseteq \sigma_3$ and $\sigma_2 \sqsubseteq \sigma_3$. The relation $\sqsubseteq$ can be understood as the \say{can be represented by}-relation. E.g. $ ‹float› \not\sqsubseteq ‹int› $, but $ ‹int› \sqsubseteq ‹float› $ (and also $ ‹int› \sqsubseteq ‹int› $).
+$\csh(\sigma_1, \sigma_2)$ defines a partial order for the set of shapes, where if $\csh(\sigma_1, \sigma_2) \vdash \sigma_3$, $\sigma_1 \sqsubseteq \sigma_3$ and $\sigma_2 \sqsubseteq \sigma_3$. The relation $\sqsubseteq$ can be understood as the \say{can be represented by}-relation. E.g. $ ‹float› \not\sqsubseteq ‹int› $, but $ ‹int› \sqsubseteq ‹float› $ (and also $ ‹int› \sqsubseteq ‹int› $).
 
 \begin{figure}[ht!]
 \vspace{2mm}
@@ -145,7 +145,7 @@ $\csh(\sigma_1, \sigma_2)$ defines a partial order for the set of shapes, where 
 \label{fig:poset}
 \end{figure}
 
-Figure~\ref{fig:poset} shows an incomplete Hasse diagram for the partially ordered set given by $\sqsubseteq$ on the set of shapes. The internal ordering of $\vect{\sigma}$ (list) and $\recd{\cdots}$ (record) shapes is not shown.
+Figure~\ref{fig:poset} shows an incomplete Hasse diagram for the partially ordered set given by $\sqsubseteq$ on the set of shapes. The internal ordering of list and record shapes, $\vect{\sigma}$ and $\recd{\cdots}$, is not shown.
 
 \begin{figure}[ht!]
 \begin{align*}
@@ -188,7 +188,9 @@ Once a shape tree has been inferred from the sample and intermediate passes have
 
 The main function takes as its input some path information, used for naming any generated types, and a shape. The function pattern matches on the shape and produces as its output a tuple: The name of the type representing the shape, and potentially some code generated to declare the returned type.
 
-Code is generated via quasiquotation, using a macro ‹quote!› from the «quote» library.
+Code is generated via quasiquotation, using a macro ‹quote!› from the «quote»\cite{quote} library.
+
+% TODO: Expand this section
 
 \subsection{Type and field names}
 
@@ -231,7 +233,7 @@ For field names, if the Rust field name does not match the JSON field name an an
 
 In addition to just generating the types themselves, the code generation can also generate a complete, runnable Rust program. In addition to the generated types, the runnable program contains the necessary imports and a main function showing how to use «serde_json» to deserialize and serialize into the generated types.
 
-The generation of a full program is mainly for documentation and demonstration purposes in the web interface. Using a button in the web interface the generated code can then be directly compiled and run in the online Rust playground.
+The generation of a full program is mainly for documentation and demonstration purposes in the web interface. Using a button in the web interface the generated code can be directly compiled and run in the online Rust playground.
 
 \subsection{Use of derivable traits}
 \label{sec:use-of-derivable-traits}
@@ -255,47 +257,24 @@ If a user breaks our preconditions in this way and this leads to a compiler erro
 
 While letting the user break these preconditions is acceptable, care has to be taken to preserve these preconditions when extending the basic system. To make the source of any errors obvious, no derive errors should be possible that does not directly mention a trait or type explicitly specified by the user. E.g. if the system is extended with sets, enabling this extension should not be possible without explicitly choosing a target type if doing so breaks the preconditions.
 
-\section{Code generation dilemmas}
+\subsection{Strictness of deserialization}
 \label{sec:design-considerations}
 
-When inferring shapes and generating code based on JSON one has to work with incomplete data. As such it is unavoidable that some choices have to be made. Unfortunately several of these choices do not present any alternative that is clearly better in all cases.
+While the types we generate should match the samples they are generated from, and any JSON text that matches their structure, there is always the possibility that the actual JSON we encounter at runtime does not perfectly match what we inferred.
 
-\placeholder{Option vs Enum, detection of entirely separate types}
+\subsubsection{Mismatched field types}
 
-\placeholder{Option vs Default, missing fields}
+If a field has entirely the wrong type, e.g. an object where we expect a number, deserialization has to fail with an error, as discovering such type issues as early as possible is a big part of the reason to deserialize to strong types. There are, however, some types we \emph{could} conceivably coerce between. E.g. the string value ‹"3.5"› could be parsed and coerced into a ‹f64› field. While I have some ideas for extensions for specific instances like strings to number, I have no plans for supporting coercing data at runtime in an ad-hoc fashion.
 
-\placeholder{Extra fields}
+When it comes to how we handle fields that are either missing or that we never saw in inference there are some choices to be made.
 
-\begin{listing}[ht!]
-\begin{minted}{json}
-[
-  {
-    "a": 1
-  },
-  {
-    "b": 1
-  }
-]
-\end{minted}
-\caption{JSON Dilemma \#1}
-\label{lst:json-dilemma-1}
-\end{listing}
+\subsubsection{Missing fields}
 
-\begin{listing}[ht!]
-\begin{minted}{rust}
-struct S {
-    a: Option<i32>,
-    b: Option<i32>,
-}
+In the inference we detect potentially missing fields and encode this information into the shapes. By default, the code generation maps $‹optional(›\sigma‹)›$ to ‹Option<T>›, and if any field that was not inferred to be optional is missing, deserialization fails. However, another way to handle missing fields that «Serde» supports is to use the default value provided by an implementation of the ‹Default› trait. I.e. if a string is missing, use the empty string, if an integer is missing use 0, and so on. By enabling this functionality for every field a user could make sure deserialization never fails due to a missing field.
 
-enum E {
-    A { a: i32 },
-    B { b: i32 },
-}
-\end{minted}
-\caption{JSON Dilemma \#1 - Two solutions}
-\label{lst:json-dilemma-1-rs}
-\end{listing}
+\subsubsection{Additional fields}
+
+By default, if «Serde» tries to deserialize and the data has an additional field that the target type does not have, the additional field is just ignored. This matches well with our intent with type providers, in that we only want to check the assumptions we actually make. However, it is also possible to make such additional fields cause deserialization to fail.
 
 \section{Extensions}
 \label{sec:extensions}
@@ -309,24 +288,37 @@ In addition to the basic inference algorithm described in section~\ref{sec:shape
 
 In the basic algorithm, if the least upper bound given by $\csh(\sigma_1, \sigma_2)$ is ‹any›, we throw away the information we have about why we had to use ‹any›, i.e. $\sigma_1$ and $\sigma_2$. The basic concept of this extension is to instead incorporate this information into a top type $‹anyof(›\sigma_1, {\cdots}, \sigma_n‹)›$. This can then be used in the code generation to e.g. create enumerated types with custom types inside.
 
-\subsection{Unsigned integers}
-\label{sec:unsigned}
+% TODO: Show how a type generated from an anyof shape could look
 
-Rust supports unsigned integers. By default we do not infer unsigned integers because the risk/reward is just not good enough to justify it as a default. However, like $‹optional(›\vect{\sigma}‹)›$, an ‹unsigned› shape can just be inferred and not used unless configured.
+% TODO: HTML or XML example
 
+This extension is absolutely vital for making the algorithm work well with XML and HTML. In these formats heterogeneous collections with easily disambiguated types are abundant. For «json_typegen», the extension is still useful, but less important than some other extensions.
 
 \subsection{JSON pointer hints and configuration}
 \label{sec:ext-json-pointers}
 
 As outlined in section~\ref{sec:json-pointers} we can use JSON pointers to specify configuration options and hints to the inference that are specific to just a part of the JSON sample.
 
-Actually applying these options and hints require some modifications to the basic version of the algorithm. Some have to be applied during inference, some are best applied as intermediate transformations between inference and code generation, and some have to be applied during the code generation.
+Actually applying these options and hints require some modifications to the basic version of the algorithm.
+
+Some have to be applied during inference, some are best applied as intermediate transformations between inference and code generation, and some have to be applied during the code generation.
+
+
 
 % some in inference, some as intermediate steps, some for
 
 % consequences of plain pointers (and array indexes), full wildcards and partial wildcards
 
 % same_as, ids to see which types are the same
+
+\subsection{More number types}
+\label{sec:unsigned}
+
+% By default, our code generation only uses ‹i64› for integers and ‹f64› for floating point numbers...
+
+Rust supports unsigned integers. By default we do not infer unsigned integers. The primary benefit of unsigned numbers is to disallow negative values, but while it is common to write floating point numbers with the decimal point even when the value is an integer, there is no such hint for numbers which may be negative. As such the risk/reward is just not good enough to justify it as a default.
+
+While unsigned numbers are not enabled by default, like $‹optional(›\vect{\sigma}‹)›$, an ‹unsigned› shape can just be inferred and not used unless manually enabled.
 
 \subsection{Maps}
 \label{sec:ext-maps}
@@ -338,7 +330,7 @@ One common issue with JSON is that its simplicity means that some common data st
 While JSON has no concept of a map, maps with strings as keys can be encoded in JSON as objects, and there is no loss of fidelity inherent in this encoding. The only issue for us is that there is no good way to infer the difference between an object used to encode a structure that will persist across e.g. API calls, and an object used to encode a mapping from arbitrary keys to values.
 
 % "Impossible" to infer, but can be hinted.
-While the intention that an object is used as a map can not be directly inferred from just a sample, with inference hints from the user code using maps can still be inferred and generated.
+While the intention that an object is used as a map can not be directly inferred from just a sample, with inference hints from the user, code using maps can still be inferred and generated.
 
 \begin{figure}[ht!]
 \begin{gather*}
@@ -433,3 +425,38 @@ If automatic inference of tuples is disabled, tuple shapes can still be created,
 Finding identical subtypes is the task of finding identical subtrees in our shape tree. A naive approach needs $\binom{n}{2} = \frac{n(n-1)}{2} \in O(n^2)$ comparisons, so care must be taken on implementation. Our shape tree can be considered to be a rooted unordered labelled tree. Finding identical types would still be somewhat useful even if we consider the tree ordered, so this could be done to make initial implementation easier.
 
 \placeholder{Inferring types from multiple samples/sample-sets but ensuring that they can still work together. Show how this can already be done to a certain extent using \url{https://github.com/lloydmeta/frunk}}
+
+\subsection{Detection of entirely separate types}
+
+When inferring shapes and generating code based on JSON one has to work with incomplete data. As such it is unavoidable that some choices have to be made. Unfortunately several of these choices do not present any alternative that is clearly better in all cases.
+
+\begin{listing}[ht!]
+\begin{minted}{json}
+[
+  {
+    "a": 1
+  },
+  {
+    "b": 1
+  }
+]
+\end{minted}
+\caption{JSON Dilemma \#1}
+\label{lst:json-dilemma-1}
+\end{listing}
+
+\begin{listing}[ht!]
+\begin{minted}{rust}
+struct S {
+    a: Option<i32>,
+    b: Option<i32>,
+}
+
+enum E {
+    A { a: i32 },
+    B { b: i32 },
+}
+\end{minted}
+\caption{JSON Dilemma \#1 - Two solutions}
+\label{lst:json-dilemma-1-rs}
+\end{listing}
