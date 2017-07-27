@@ -1,32 +1,35 @@
 %!TEX root = ../main.tex
 
 \chapter{Introduction}
+\label{chap:introduction}
 
 \begin{picture}(0,0)
 \put(190,50){\hbox{\includegraphics[width=4.2cm, angle=-5, trim=4 4 4 4, clip]{ferris/book}}}
 \end{picture}
 \vspace{-1cm}
 
-When programmers access external data in a statically typed programming language, they are often faced with a dilemma between convenient and type-safe access to the data.
+When programmers write programs that access external data in a statically typed programming language, they are often faced with a dilemma between convenience and type-safe access to the data they wish to use. For type-safe access, significant boiler-plate code or types must usually be written.
 
-In the programming language F\#, a concept called type providers has been proposed as a solution to this problem by having compiler support for libraries with the capability to generate types at compile time.
+In the programming language F\#, a concept called type providers has been proposed as a solution to this problem by having compiler support for libraries with the capability to generate custom types that reflect the external data, at compile time.
 
-This thesis presents «json_typegen», a project which aims to show the feasibility of similar solutions in the Rust programming language. The project uses compile-time metaprogramming along with alternative interfaces to the same code generation implementation to achieve convenient, type-safe access to data in the JSON data format. While JSON is chosen as the format for the presented library, the approach also applies to other data formats and sources.
+This thesis presents «json_typegen», a project which aims to show the feasibility of similar solutions in the Rust programming language. The project uses compile-time metaprogramming along with alternative interfaces to the same code generation implementation to achieve convenient, type-safe access to data in the JSON data format. While the presented project provides support for JSON specifically, the approach, and much of the code used by «json_typegen» can also ber used for other data formats and sources.
 
 In this chapter we will look at the background for the «json_typegen» project.
 
 First, in section~\ref{sec:rust-intro}, we will look at the Rust programming language. Then, in section~\ref{sec:json}, we will look at the JSON data interchange format, and the challenges associated with accessing data in JSON from statically typed programming languages, and Rust in particular. Finally, in section~\ref{sec:type-providers} we will look at how these challenges have been attempted solved with type providers in the programming language F\#.
 
+In chapter~\ref{chap:project-presentation}, the project and its interfaces is presented in detail. And in chapter~\ref{chap:code-generation} we will look at how the code inference and code generation used in the project works.
+
 \section{The Rust programming language}
 \label{sec:rust-intro}
 
-The project, «json_typegen», creates types for programs written in the Rust programming language, and is itself written in Rust. The Rust programming language is a modern, open source programming language with C-like surface syntax. It is a statically typed language with type inference, with a focus on memory safety and zero-cost abstractions.
+The project presented in the thesis, «json_typegen», creates types for programs written in the Rust programming language, and is itself written in Rust. The Rust programming language is a modern, open source programming language with C-like surface syntax. It is a statically typed language with type inference, with a focus on memory safety and zero-cost abstractions.
 
 Rust does not use a garbage collector and the core library can be used without access to heap allocation. This allows Rust to be used for what is often referred to as \say{systems programming}, e.g. for writing drivers, operating systems and code for microcontrollers. Spaces which has so far been occupied mainly by C and \cpp\footnote{There are \emph{some} other languages that can be said to compete in this area, like Ada, Objective-C and D. I won't go into the details of how these languages compare to Rust, but for various reasons \cpp\ is the main competitor and point of comparison for most use cases.}. Rust tries to combine the low-level control of these languages with modern syntax and an advanced type system that statically prevents whole classes of memory safety issues\cite{the-rust-language}.
 
 While the basic syntax of Rust can be said to be C-like it also has a lot of functionality and syntax reminiscent of functional languages and in particular languages of the ML-family. Features such as closures, pattern matching and monadic error handling are available and a significant part of idiomatic Rust code.
 
-What follows is a very basic introduction to the parts of Rust we need to talk about in this thesis. For more details see \href{https://doc.rust-lang.org/book/}{the Rust book}\footnote{\url{https://doc.rust-lang.org/book/}}.
+What follows is a very basic introduction to the parts of Rust we need to talk about in this thesis. Many of Rusts more advanced language features are not necessary to understand the basic concepts of this thesis, and are as such not explained here. For more details on the language features of Rust, see \href{https://doc.rust-lang.org/book/}{the Rust book}\footnote{\url{https://doc.rust-lang.org/book/}}.
 
 \subsection{Structs}
 
@@ -41,7 +44,7 @@ struct Person {
 \label{lst:struct}
 \end{listing}
 
-The primary language construct for complex types in Rust are structs. A struct declaration in Rust is a number of fields with types. Also known as a product type or record. Rust is not object oriented, and there is no inheritance for structs. Polymorphism in Rust is instead supported by enumerated types, and traits.
+The primary language construct for complex types in Rust are structs. A struct declaration, as shown in Listing~\ref{lst:struct}, is a sequence of field names, along with their types. Structs are product types and are analogous to records in some languages. Rust does not have classes or objects, and is not object oriented in the classical sense. In other words is there no inheritance between structs, and polymorphism in Rust is instead supported by other language features, such as enumerated types, and traits.
 
 \subsection{Enums}
 
@@ -63,9 +66,7 @@ Rust supports pattern matching on enum types and verifies that any match is exha
 \subsection{Traits}
 \label{sec:traits}
 
-A trait specifies methods that a type needs to provide to implement the trait. On a superficial level traits are similar to interfaces in languages like Java, and type classes in Haskell.
-
-Some traits can be derived -- automatically implemented -- by the compiler. This is done by annotating the type with a ‹derive› attribute with a list of the traits to derive implementations for.
+A trait specifies methods that a type needs to provide to implement the trait. On a superficial level, traits in Rust are similar to interfaces in languages like Java, and type classes in Haskell.
 
 \begin{listing}[ht!]
 \begin{minted}{rust}
@@ -90,14 +91,16 @@ impl Clone for Bag {
 \label{lst:trait}
 \end{listing}
 
-Listing~\ref{lst:trait} shows a simplified version of the trait ‹Clone›, a struct which automatically derives the trait ‹Debug› -- with the annotation ‹derive(Debug)› -- and manually implements ‹Clone› with an ‹impl Clone› block.
+Listing~\ref{lst:trait} shows the trait ‹Clone›, which is a slightly simplified version of a trait in the Rust standard library. The trait defines the function ‹clone›, which takes as its argument a reference to an instance of the type implementing the trait -- ‹&self› -- and returns a new copy of the same type -- ‹Self›.
 
-It is also possible to write libraries for deriving custom traits. Deriving a trait usually requires that the constituent types also implements the trait. E.g. to derive ‹Clone› for ‹Ty› you need to be able to clone all parts of ‹Ty›.
+The listing also shows a struct, ‹Bag›, which implements two traits. ‹Bag› implements the trait ‹Clone› with an ‹impl Clone› block, providing an implementation of the required function.
+
+In addition to the manual implementation of ‹Clone›, the trait ‹Debug›, is \say{derived}, i.e. automatically implemented by the compiler, using an annotation, \mbox{\icode{\#[derive(Debug)]}}. The code for this automatic implementation is included with the compiler, but it is also possible to write libraries that can derive custom traits. Deriving a trait usually requires that the constituent types also implements the trait. E.g. to derive ‹Clone› for ‹Ty› you need to be able to clone all parts of ‹Ty›.
 
 \subsection{Macros}
 \label{sec:macros}
 
-A macro system is in short a language feature that allows a programmer to write code that does source-to-source transformations, also known as meta-programming. In Rust there are two categories of macros: declarative macros and procedural macros, which are both expanded at compile time.
+A macro system is in short a language feature that allows a programmer to write code that does source-to-source transformations, also known as metaprogramming. In Rust there are two categories of macros: declarative macros and procedural macros, which are both expanded at compile time.
 
 \begin{listing}[ht!]
 \textbf{Macro declaration:}
@@ -367,13 +370,13 @@ The compiler also provides functionality that makes it easy for implementors of 
 So what \emph{is} a type provider? How do they work? From an implementation standpoint, support for type providers can be boiled down to two features:
 
 \begin{itemize}
-  \item Compile-time meta-programming with access to side effects\footnote{The paper \emph{Dependent Type Providers}\cite{dependent-type-providers}, which shows the use of dependent types in the Idris programming language to create type providers, shows that \say{compile-time meta-programming with access to side effects} could possibly be replaced with \say{type creation abilities with side effects}.}, with the expressiveness of a full programming language.
-  \item Support for thunks, i.e. lazy or delayed evaluation, of at least parts of the abstract syntax tree, and letting such thunks be made by compile-time meta-programming.
+  \item Compile-time metaprogramming with access to side effects\footnote{The paper \emph{Dependent Type Providers}\cite{dependent-type-providers}, which shows the use of dependent types in the Idris programming language to create type providers, shows that \say{compile-time metaprogramming with access to side effects} could possibly be replaced with \say{type creation abilities with side effects}.}, with the expressiveness of a full programming language.
+  \item Support for thunks, i.e. lazy or delayed evaluation, of at least parts of the abstract syntax tree, and letting such thunks be made by compile-time metaprogramming.
 \end{itemize}
 
 Additionally, for a type provider to make sense, the language has to be statically typed. In a dynamically typed language, the types are associated with the runtime instances of values, so providing extra type information before runtime does not provide much benefit. Since type providers can create a large number of types it is also beneficial if the language has type inference so the actual names of the sub-types are less significant.
 
-As we looked at in section~\ref{sec:macros}, Rust does have compile-time meta-programming with the flexibility of a full programming language, in the form of procedural macros. It is also a statically typed language with type inference. Rust does however not have any ability for procedural macros to let parts of the generated code be created lazily.
+As we looked at in section~\ref{sec:macros}, Rust does have compile-time metaprogramming with the flexibility of a full programming language, in the form of procedural macros. It is also a statically typed language with type inference. Rust does however not have any ability for procedural macros to let parts of the generated code be created lazily.
 
 In F\# type provider implementations it is possible to add type members as thunks, which are then only evaluated as required by the compiler. This makes it possible for type providers to provide access to data which whose type spaces would otherwise be too large to create custom types for. Just like lazy evaluation makes infinite lists possible, and practical, in languages like Haskell, thunks as parts of the generated types makes arbitrary large or infinite type hierarchies possible, and practical, in F\#.
 
