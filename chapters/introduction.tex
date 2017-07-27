@@ -56,7 +56,7 @@ enum Option<T> {
 \label{lst:enum}
 \end{listing}
 
-An enum in Rust is a data type that is one alternative from a number of variants, i.e. an enumerated type, sum type or union. A declaration of an enum, as seen in listing~\ref{lst:enum} is given as a list of variant names, used as constructors. Each variant can optionally carry some associated data.
+An enum in Rust is a data type that is one alternative from a number of variants, i.e. an enumerated type, sum type or union. A declaration of an enum, as seen in Listing~\ref{lst:enum} is given as a list of variant names, used as constructors. Each variant can optionally carry some associated data.
 
 Rust supports pattern matching on enum types and verifies that any match is exhaustive.
 
@@ -162,7 +162,7 @@ JSON is a text-based data format for structured data. It is very commonly used a
 \label{lst:json-grammar}
 \end{listing}
 
-The format as described by the two official JSON specifications -- IETF RFC 7159\cite{RFC7159} and ECMA 404\cite{ECMA404} -- is very simple. As can be seen from the grammar in listing~\ref{lst:json-grammar} a JSON value can only be an object, array, number or string, or the literals ‹true›, ‹false› or ‹null›. In addition, there is no way to define new types, references or to specify external resources or definitions.
+The format as described by the two official JSON specifications -- IETF RFC 7159\cite{RFC7159} and ECMA 404\cite{ECMA404} -- is very simple. As can be seen from the grammar in Listing~\ref{lst:json-grammar} a JSON value can only be an object, array, number or string, or the literals ‹true›, ‹false› or ‹null›. In addition, there is no way to define new types, references or to specify external resources or definitions.
 % contrast simplicity to XML?
 
 % FIXME: The whole misnomer thing is a bit iffy
@@ -215,7 +215,7 @@ print(parsed["phoneNumbers"][0]["areaCode"])
 \label{lst:readjsonpy}
 \end{listing}
 
-In dynamically typed programming languages reading data from deserialized JSON is relatively straightforward, as seen in listings~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy}, showing parsing and reading in JavaScript and Python\footnote{It is also possible in Python to get the JSON deserialized into such forms that its syntax become more like the direct field access of JavaScript, but the code shown uses the default behaviour.} respectively. The code in these listings can, however, fail at runtime with exceptions or errors if the deserialized data does not match expectations. So in many real world use cases the code will be a bit more complex.
+In dynamically typed programming languages reading data from deserialized JSON is relatively straightforward, as seen in Listings~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy}, showing parsing and reading in JavaScript and Python\footnote{It is also possible in Python to get the JSON deserialized into such forms that its syntax become more like the direct field access of JavaScript, but the code shown uses the default behaviour.} respectively. The code in these Listings can, however, fail at runtime with exceptions or errors if the deserialized data does not match expectations. So in many real world use cases the code will be a bit more complex.
 
 \subsection{Reading JSON in statically typed languages}
 
@@ -249,7 +249,7 @@ enum Value {
 \label{lst:valueenum}
 \end{listing}
 
-Listing~\ref{lst:valueenum} shows the Rust type ‹Value› from the library «serde_json». Any legal JSON can be encoded by this type. Similar types can be created in most programming languages. However, working with such types in a type-safe manner can be both tedious and error-prone. The code in listing~\ref{lst:readjsonrs1} does approximately the same thing as the code in listings~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy}, using pattern matching. While the code is type-safe and will not fail at runtime, it is not particularly convenient.
+Listing~\ref{lst:valueenum} shows the Rust type ‹Value› from the library «serde_json». Any legal JSON can be encoded by this type. Similar types can be created in most programming languages. However, working with such types in a type-safe manner can be both tedious and error-prone. The code in Listing~\ref{lst:readjsonrs1} does approximately the same thing as the code in Listings~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy}, using pattern matching. While the code is type-safe and will not fail at runtime, it is not particularly convenient.
 
 \begin{listing}[ht!]
 \begin{minted}{rust}
@@ -295,7 +295,7 @@ The first way shows how it is possible to use indexing syntax -- ‹container[in
 
 The second approach shown instead uses a string, which encodes a path\footnote{The path is encoded as a JSON Pointer. We will come back to JSON Pointers in more detail in section~\ref{sec:json-pointers}.}, to combine multiple ‹get()› calls into a single function call. This call returns an ‹Option› to distinguish between ‹Null› values and lookup failure, but is otherwise quite similar.
 
-Neither of these approaches, nor the first approach with the individual ‹get()› calls actually gives us a number in the form of an integer, though. What we actually get is\footnote{Assuming the input was the string in listing~\ref{lst:json1}.} a ‹Value::Number(Number { ... })› which means that if we wanted to do something else than just printing it, our code would still have some unwrapping to do. And with all this, if we misspell a field, we may not even know that the code failed at runtime because of a typo and not some problem with the data.
+Neither of these approaches, nor the first approach with the individual ‹get()› calls actually gives us a number in the form of an integer, though. What we actually get is\footnote{Assuming the input was the string in Listing~\ref{lst:json1}.} a ‹Value::Number(Number { ... })› which means that if we wanted to do something else than just printing it, our code would still have some unwrapping to do. And with all this, if we misspell a field, we may not even know that the code failed at runtime because of a typo and not some problem with the data.
 
 \subsubsection{Custom types}
 
