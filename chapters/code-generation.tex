@@ -297,15 +297,16 @@ This extension is absolutely vital for making the algorithm work well with XML a
 \subsection{JSON pointer hints and configuration}
 \label{sec:ext-json-pointers}
 
-As outlined in section~\ref{sec:json-pointers} we can use JSON pointers to specify configuration options and hints to the inference that are specific to just a part of the JSON sample.
+As outlined in section~\ref{sec:json-pointers} we can use JSON pointers to specify configuration options and hints (hereafter referred to as just options) to the inference that are specific to just a part of the JSON sample.
 
-Actually applying these options and hints require some modifications to the basic version of the algorithm.
+Actually applying these options require some modifications to the basic version of the algorithm. However, the options are not all applied the same way or at the same time. Some have to be applied during inference, some are best applied as intermediate transformations between inference and code generation, and some have to be applied during the code generation. This means that while we start with a simple list of options, we have to do some pre-processing of the options before running the algorithm with them.
 
-Some have to be applied during inference, some are best applied as intermediate transformations between inference and code generation, and some have to be applied during the code generation.
+The pointer options must then be threaded through our inference and code generation functions, and applied as they match.
+
+A pointer option is a 3-tuple of a pointer, an option name, and an option value. For applying the option we transform the pointer into a list of keys. E.g. the pointer ‹"/field1/field2"› is converted to the list of keys $[‹"field1"›, ‹"field2"›]$. For
 
 
-
-% some in inference, some as intermediate steps, some for
+% some in inference, some as intermediate steps, some for code generation
 
 % consequences of plain pointers (and array indexes), full wildcards and partial wildcards
 
@@ -314,11 +315,32 @@ Some have to be applied during inference, some are best applied as intermediate 
 \subsection{More number types}
 \label{sec:unsigned}
 
-% By default, our code generation only uses ‹i64› for integers and ‹f64› for floating point numbers...
+By default, our code generation only uses ‹i64› for integers and ‹f64› for floating point numbers. While these are good defaults, there are several other number types that could be used. In particular, the Rust standard library provides types for unsigned numbers, e.g. ‹u64›, and smaller numbers, e.g. ‹i8› and ‹f32›. While rare in practice, JSON numbers can also be arbitrarily large and precise, so it is also worth considering support for big integers and arbitrary precision floats.
 
-Rust supports unsigned integers. By default we do not infer unsigned integers. The primary benefit of unsigned numbers is to disallow negative values, but while it is common to write floating point numbers with the decimal point even when the value is an integer, there is no such hint for numbers which may be negative. As such the risk/reward is just not good enough to justify it as a default.
+% Consider showing specific extension
+Adding support for just unsigned numbers could be done by adding another shape ‹unsigned› to our set of shapes, changing the rule for $\shap(‹Number(›n‹)›)$ to use ‹unsigned› if possible and adding some rules to $\csh(\sigma_1, \sigma_2)$. However, extending the inference in this fashion scales very poorly. For $n$ number shapes, we would need $n!$ rules in $\csh(\sigma_1, \sigma_2)$.
 
-While unsigned numbers are not enabled by default, like $‹optional(›\vect{\sigma}‹)›$, an ‹unsigned› shape can just be inferred and not used unless manually enabled.
+What I propose instead is to replace ‹int› and ‹float› with a single number shape, $‹number(› m, n, f ‹)›$, which tracks three properties:
+
+\begin{itemize}
+  \item The minimum observed value, $m$
+  \item The maximum observed value, $n$
+  \item Whether any of the observed values was floating point, $f$
+\end{itemize}
+
+The rules for ‹float› and ‹int› in $\shap$ and $\csh$ and can then be replaced with the following rules:
+
+\begin{gather*}
+\shap(‹Number(›n‹)›) = ‹number(› n, n, n \in \mathbb{Z} ‹)› \\
+\\
+\csh(‹number(› m_1, n_1, f_1 ‹)›, ‹number(› m_2, n_2, f_2 ‹)›) =\\ ‹number(› \min(m_1, m_2), \max(n_1, n_2), f_1 \lor f_2 ‹)›
+\end{gather*}
+
+If it is desirable to infer arbitrary precision floats one should also track the maximum observed precision. And while in theory, the shape and rules as outlined above could work for arbitrarily large integers this is not something that can be easily implemented in «json_typegen». The reason for this is that the ‹Value› type from «serde_json» currently only supports numbers that can be represented with the base rust types. In other words, to add support for detecting such numbers, we would have to replace «serde_json» with our own parser.
+
+While arbitrary precision is out of the question to begin with, the extension should be sufficient for all the number types in the Rust standard library. By default we should still only generate ‹i64› and ‹f64›, though. The primary benefit of unsigned numbers is to disallow negative values (the slightly extended positive range is usually a secondary concern), but while it is common to write floating point numbers with the decimal point even when the value is an integer, there is no such hint for numbers which may be negative. As such the risk/reward is just not good enough to justify it as a default. In the same way, using ‹i8› instead of ‹i64› only restricts the possible values, and e.g. documentation samples can often have artificially small numbers, so the risk of assuming small ranges from limited samples should not be the default.
+
+While unsigned and smaller numbers are not enabled by default, like $‹optional(›\vect{\sigma}‹)›$, a flexible number shape just preserves additional information that can be used if enabled through configuration.
 
 \subsection{Maps}
 \label{sec:ext-maps}
@@ -334,9 +356,9 @@ While the intention that an object is used as a map can not be directly inferred
 
 \begin{figure}[ht!]
 \begin{gather*}
-\shap(‹Object(›\{ k_1 : \omega_1, \cdots, k_n : \omega_n \}‹)›, [\cdots, ‹"" use_type map›, \cdots]) = \\
+\shap(‹Object(›\{ k_1 : \omega_1, \cdots, k_n : \omega_n \}‹)›, [\cdots, [] ‹ use_type map›, \cdots]) = \\
 ‹map(›\fold(\csh, \bot, [\shap(\omega_1), \cdots, \shap(\omega_n)])‹)› \\
-\shap(\omega, [\cdots, ‹"" use_type map›, \cdots]) = ‹error!›
+\shap(\omega, [\cdots, [] ‹ use_type map›, \cdots]) = ‹error!›
 \end{gather*}
 \caption{Extending the hinted $\shap$ to support maps}
 \label{fig:shap-map}

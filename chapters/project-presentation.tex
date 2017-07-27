@@ -56,7 +56,7 @@ fn main() {
 
 In listing~\ref{lst:proc-macro-example} a minimal example of usage of the procedural macro ‹json_typegen› is shown. This example is provided in the project source as a demo crate, «json_typegen_demo». It is worth noting that the calls to ‹unwrap› unwraps result values assuming success, and will crash the program in the event of a serialization or deserialization failure. In a real world use case, we would replace these calls with error handling code.
 
-As can be seen in the example, the procedural macro defines a type -- ‹Point› -- which is then available to be used by the programmer as any other type. The type gives type safe access to its fields, in the example ‹p.x›. Attempts to access an invalid field -- e.g. ‹p.z› -- would be a type error and thus be caught at compile time.
+As can be seen in the example, the procedural macro defines a type -- ‹Point› -- which is then available to be used by the programmer as any other type. The type gives type-safe access to its fields, in the example ‹p.x›. Attempts to access an invalid field -- e.g. ‹p.z› -- would be a type error and thus be caught at compile time.
 
 Like ‹JsonProvider›, the procedural macro supports inline samples as shown, samples stored as local files and URLs that point to remote samples:
 

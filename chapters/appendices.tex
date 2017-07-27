@@ -9,3 +9,70 @@
 \rustfile[firstline=20,lastline=86]{code/shape_inference/src/lib.rs}
 \newpage
 \rustfile[firstline=88]{code/shape_inference/src/lib.rs}
+
+\chapter{Comparison of project setup with dependencies in Rust and C++}
+\label{app:cargo-cpp-comparison}
+
+\subsubsection{Minimal project setup in Rust}
+
+\begin{enumerate}
+  \item Install the Rust toolchain:\\
+        ‹curl https://sh.rustup.rs -sSf | sh›
+  \item Create a new (binary) project:\\
+        ‹cargo new --bin timer && cd timer›
+  \item Add a dependency to the Cargo configuration file:\\
+        ‹echo 'tokio-timer = "*"' >Cargo.toml›
+  \item Write some actual Rust code:\\
+        \icode{{\$}EDITOR src/main.rs}
+  \item Build and run:\\
+        ‹cargo run›
+\end{enumerate}
+
+% curl https://sh.rustup.rs -sSf | sh
+% cargo new --bin timer && cd timer
+% echo 'tokio-timer = "*"' >Cargo.toml
+% $EDITOR src/main.rs
+% cargo run
+
+\newpage
+
+\subsubsection{Minimal project setup in \cpp}
+
+\begin{enumerate}
+  \item Choose and install a \cpp\ toolchain. What toolchains are available and how to install them differs from platform to platform, and some may have a toolchain installed. To keep things somewhat simple, installation is omitted here.
+  \item Choose and install a dependency manager. Throughout the years there have been several \cpp\ dependency manager projects that have come and gone, so this choice is not entirely without risks. Without going into the details why, I chose «conan»\footnote{\url{http://conan.io}}. The rest of these steps are based on the «conan» \say{Getting started}-guide\footnote{\url{http://docs.conan.io/en/latest/getting_started.html}}. Again installation depends somewhat on platform. For my part I installed it using «homebrew»\footnote{Which itself would have to been installed if it was not so already.}:\\
+        ‹brew install conan›
+  \item Choose and install a build tool. Since the «conan» guide uses «CMake» this is also what we will use here. Again, installation method differs, but for my part:\\
+        ‹brew install cmake›
+  \item Make a project directory:\\
+        ‹mkdir timer && cd timer›
+  \item Make and write a «conan» configuration file:\\
+        \icode{{\$}EDITOR conanfile.txt}
+  \item Write some actual \cpp\ code:\\
+        \icode{{\$}EDITOR timer.cpp}
+  \item Make and write a «CMake» configuration file:\\
+        \icode{{\$}EDITOR CMakeLists.txt}
+  \item Make a build directory:\\
+        ‹mkdir build && cd build›
+  \item Install dependencies:\\
+        ‹conan install ..›
+  \item Prepare build:\\
+        ‹cmake ..›
+  \item Build:\\
+        ‹cmake --build .›
+  \item Run the resulting program:\\
+        ‹bin/timer›
+\end{enumerate}
+
+% Install a \cpp\ toolchain
+% brew install conan
+% brew install cmake
+% mkdir timer && cd timer
+% $EDITOR conanfile.txt
+% $EDITOR timer.cpp
+% $EDITOR CMakeLists.txt
+% mkdir build && cd build
+% conan install ..
+% cmake ..
+% cmake --build .
+% bin/timer

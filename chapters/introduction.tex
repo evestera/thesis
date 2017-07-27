@@ -7,6 +7,12 @@
 \end{picture}
 \vspace{-1cm}
 
+When programmers access external data in a statically typed programming language, they are often faced with a dilemma between convenient and type-safe access to the data.
+
+In the programming language F\#, a concept called type providers has been proposed as a solution to this problem by having compiler support for libraries with the capability to generate types at compile time.
+
+This thesis presents «json_typegen», a project which aims to show the feasibility of similar solutions in the Rust programming language. The project uses compile-time metaprogramming along with alternative interfaces to the same code generation implementation to achieve convenient, type-safe access to data in the JSON data format. While JSON is chosen as the format for the presented library, the approach also applies to other data formats and sources.
+
 In this chapter we will look at the background for the «json_typegen» project.
 
 First, in section~\ref{sec:rust-intro}, we will look at the Rust programming language. Then, in section~\ref{sec:json}, we will look at the JSON data interchange format, and the challenges associated with accessing data in JSON from statically typed programming languages, and Rust in particular. Finally, in section~\ref{sec:type-providers} we will look at how these challenges have been attempted solved with type providers in the programming language F\#.
@@ -14,9 +20,9 @@ First, in section~\ref{sec:rust-intro}, we will look at the Rust programming lan
 \section{The Rust programming language}
 \label{sec:rust-intro}
 
-The Rust programming language is a modern, open source programming language with C-like surface syntax. It is a statically typed language with type inference, with a focus on memory safety and zero-cost abstractions.
+The project, «json_typegen», creates types for programs written in the Rust programming language, and is itself written in Rust. The Rust programming language is a modern, open source programming language with C-like surface syntax. It is a statically typed language with type inference, with a focus on memory safety and zero-cost abstractions.
 
-Rust does not use a garbage collector and the core library can be used without access to heap allocation. This allows Rust to be used for what is often referred to as \say{systems programming}, for writing drivers, operating systems and code for microcontrollers. Spaces which has so far been occupied mainly by C and \cpp\footnote{There are \emph{some} other languages that can be said to compete in this area, like Ada, Objective-C and D. I won't go into the details of how these languages compare to Rust, but for various reasons \cpp\ is the main competitor and point of comparison for most use cases.}. Rust tries to combine the low-level control of these languages with modern syntax and an advanced type system that statically prevents whole classes of memory safety issues\cite{the-rust-language}.
+Rust does not use a garbage collector and the core library can be used without access to heap allocation. This allows Rust to be used for what is often referred to as \say{systems programming}, e.g. for writing drivers, operating systems and code for microcontrollers. Spaces which has so far been occupied mainly by C and \cpp\footnote{There are \emph{some} other languages that can be said to compete in this area, like Ada, Objective-C and D. I won't go into the details of how these languages compare to Rust, but for various reasons \cpp\ is the main competitor and point of comparison for most use cases.}. Rust tries to combine the low-level control of these languages with modern syntax and an advanced type system that statically prevents whole classes of memory safety issues\cite{the-rust-language}.
 
 While the basic syntax of Rust can be said to be C-like it also has a lot of functionality and syntax reminiscent of functional languages and in particular languages of the ML-family. Features such as closures, pattern matching and monadic error handling are available and a significant part of idiomatic Rust code.
 
@@ -35,7 +41,7 @@ struct Person {
 \label{lst:struct}
 \end{listing}
 
-A struct declaration in Rust is a number of fields with types. Also known as a product type or record. Rust is not object oriented, and there is no inheritance for structs. Polymorphism in Rust is instead supported by enumerated types and traits.
+The primary language construct for complex types in Rust are structs. A struct declaration in Rust is a number of fields with types. Also known as a product type or record. Rust is not object oriented, and there is no inheritance for structs. Polymorphism in Rust is instead supported by enumerated types, and traits.
 
 \subsection{Enums}
 
@@ -127,75 +133,13 @@ Procedural macros are macros where the expansion is done by running a procedure 
 
 \subsection{Cargo}
 
-While not a part of the Rust programming language itself, with every normal installation of Rust a command line tool known as Cargo is also installed. Cargo is the package manager and build tool for the Rust ecosystem. Cargo makes it easy to create new packages -- \say{crates} in Rust terminology -- building them, and managing other crates as dependencies.
+Cargo is the package manager and build tool for the Rust ecosystem. While not a part of the Rust programming language itself, it is provided alongside the compiler in every normal installation. Cargo makes it easy to create new packages -- \say{crates} in Rust terminology -- build them, and manage other crates as dependencies.
 
-While users of some programming languages may be accustomed to build systems with good dependency management this is not the case for users of the traditional systems level languages, C and \cpp. Since this thesis is essentially about a dependency on offer, it is important to point out how much lower the barrier for adding dependencies is in Rust, than in C and \cpp.
+While users of some programming languages may be accustomed to build systems with good dependency management this is not the case for users of the traditional systems level languages, C and \cpp. The part of «json_typegen» that comes closest to working like a type provider is a library the user adds a dependency to their project. Thanks to the availability of Cargo, this is an almost insignificant barrier for potential users of the project.
 
-For a perspective on the difference in how the development experience differs it is useful to look at how the experience of going from nothing to a minimal project with a dependency is in Rust and \cpp.
+For a perspective on the difference in the development experience it is useful to look at how the experience of going from nothing to a minimal project with a dependency is in Rust and \cpp.
 
-\subsubsection{Minimal project setup in \cpp}
-
-\begin{enumerate}
-  \item Choose and install a \cpp\ toolchain. What toolchains are available and how to install them differs from platform to platform, and some may have a toolchain installed. To keep things somewhat simple, installation is omitted here.
-  \item Choose and install a dependency manager. Throughout the years there have been several \cpp\ dependency manager projects that have come and gone, so this choice is not entirely without risks. Without going into the details why, I chose «conan»\footnote{\url{http://conan.io}}. The rest of these steps are based on the «conan» \say{Getting started}-guide\footnote{\url{http://docs.conan.io/en/latest/getting_started.html}}. Again installation depends somewhat on platform. For my part I installed it using «homebrew»\footnote{Which itself would have to been installed if it was not so already.}:\\
-        ‹brew install conan›
-  \item Choose and install a build tool. Since the «conan» guide uses «CMake» this is also what we will use here. Again, installation method differs, but for my part:\\
-        ‹brew install cmake›
-  \item Make a project directory:\\
-        ‹mkdir timer && cd timer›
-  \item Make and write a «conan» configuration file:\\
-        \icode{{\$}EDITOR conanfile.txt}
-  \item Write some actual \cpp\ code:\\
-        \icode{{\$}EDITOR timer.cpp}
-  \item Make and write a «CMake» configuration file:\\
-        \icode{{\$}EDITOR CMakeLists.txt}
-  \item Make a build directory:\\
-        ‹mkdir build && cd build›
-  \item Install dependencies:\\
-        ‹conan install ..›
-  \item Prepare build:\\
-        ‹cmake ..›
-  \item Build:\\
-        ‹cmake --build .›
-  \item Run the resulting program:\\
-        ‹bin/timer›
-\end{enumerate}
-
-% Install a \cpp\ toolchain
-% brew install conan
-% brew install cmake
-% mkdir timer && cd timer
-% $EDITOR conanfile.txt
-% $EDITOR timer.cpp
-% $EDITOR CMakeLists.txt
-% mkdir build && cd build
-% conan install ..
-% cmake ..
-% cmake --build .
-% bin/timer
-
-\subsubsection{Minimal project setup in Rust}
-
-\begin{enumerate}
-  \item Install the Rust toolchain:\\
-        ‹curl https://sh.rustup.rs -sSf | sh›
-  \item Create a new (binary) project:\\
-        ‹cargo new --bin timer && cd timer›
-  \item Add a dependency to the Cargo configuration file:\\
-        ‹echo 'tokio-timer = "*"' >Cargo.toml›
-  \item Write some actual Rust code:\\
-        \icode{{\$}EDITOR src/main.rs}
-  \item Build and run:\\
-        ‹cargo run›
-\end{enumerate}
-
-% curl https://sh.rustup.rs -sSf | sh
-% cargo new --bin timer && cd timer
-% echo 'tokio-timer = "*"' >Cargo.toml
-% $EDITOR src/main.rs
-% cargo run
-
-While the above examples do not cover tasks like finding new dependencies, publishing packages etc, they provide a clear example of the difference in the build tooling available.
+In appendix~\ref{app:cargo-cpp-comparison} I have included a comparison of setting up a project using both Cargo and what I currently consider to be the best alternative in the \cpp\ ecosystem. While the specifics are not important, suffice to say that setting up a project and adding dependencies in Rust using Cargo is significantly easier and more easily reproducible than the equivalent scenario using \cpp.
 
 % Possible expansions here:
 % - Example of Cargo.toml and cargo commands
@@ -450,10 +394,10 @@ While thunks as parts of generated types is clearly a very powerful feature, man
 \subsection{Advantages of F\#s type providers}
 
 % "Type checking" external resources
-The most significant benefit of type providers is that they enable type safe access to external resources, significantly improving type checking for sections of code using data from a type provider.
+The most significant benefit of type providers is that they enable type-safe access to external resources, significantly improving type checking for sections of code using data from a type provider.
 
 % Explorative programming / Tooling help
-As mentioned, such type safe access can also be achieved by manually writing the custom types, but the ease of use of a type provider makes it very easy to add a new external resource and start experimenting. Not only is the barrier of having to write boilerplate code reduced or removed, but type information gleaned through e.g. autocomplete facilitates exploration of the resource.
+As mentioned, such type-safe access can also be achieved by manually writing the custom types, but the ease of use of a type provider makes it very easy to add a new external resource and start experimenting. Not only is the barrier of having to write boilerplate code reduced or removed, but type information gleaned through e.g. autocomplete facilitates exploration of the resource.
 
 When working with external data, the code we write encode our assumptions about the data we are working with. E.g. if I have parsed some data into a variable ‹p› and I write code like ‹let real_name: String = p.name›, the code encodes my assumptions that the data has a field with the name ‹name›, and that said field is a string. When the types are in sync with the external data the type checking will thus check that our assumptions match the actual structure of the data. Additionally, the type checking will \emph{only} check the assumptions we state through our use of the data, which are likely to be the ones we care about.
 
