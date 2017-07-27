@@ -158,15 +158,14 @@ JSON is a text-based data format for structured data. It is very commonly used a
 \textit{number} ::= &\ [\ ‹-›\ ]\ \textit{int}\ [\ \textit{frac}\ ]\ [\ \textit{exp}\ ]\ \\
 \textit{string} ::= &\ ‹"›\ \text{*}\textit{char}\ ‹"›
 \end{align*}
-\caption{The JSON grammar from RFC 7159. It is somewhat simplified as the actual specification is very precise. See the full specification for the exact definitions of \textit{int}, \textit{frac}, \textit{exp} and \textit{char}.}
+\caption[The JSON grammar]{The JSON grammar from RFC 7159. It is somewhat simplified as the actual specification is very precise. See the full specification for the exact definitions of \textit{int}, \textit{frac}, \textit{exp} and \textit{char}.}
 \label{lst:json-grammar}
 \end{listing}
 
-The format as described by the two official JSON specifications -- IETF RFC 7159\cite{RFC7159} and ECMA 404\cite{ECMA404} -- is very simple. As can be seen from the grammar in Listing~\ref{lst:json-grammar} a JSON value can only be an object, array, number or string, or the literals ‹true›, ‹false› or ‹null›. In addition, there is no way to define new types, references or to specify external resources or definitions.
+The format as described by the two official JSON specifications -- IETF RFC 7159\cite{RFC7159} and ECMA 404\cite{ECMA404} -- is intended to be very simple to write and to parse. As can be seen from the grammar in Listing~\ref{lst:json-grammar} a JSON value can only be an object, array, number or string, or one of the literals ‹true›, ‹false› and ‹null›. In addition, there is no way to define new types, references or to specify external resources or definitions.
 % contrast simplicity to XML?
 
-% FIXME: The whole misnomer thing is a bit iffy
-A JSON object is a collection of mappings from keys (that are JSON strings) to JSON values. As this closely corresponds to what is usually referred to as a map or a dictionary in most programming languages, the term object may seem like a bit of a misnomer here, arising from JSONs background as a subset of JavaScript. Whether or not an objects members are unordered is explicitly unspecified by RFC 1759, but \say{Implementations whose behavior does not depend on member ordering will be interoperable in the sense that they will not be affected by these differences.}\cite[6]{RFC7159}
+A JSON object is a collection of mappings from keys (that are JSON strings) to JSON values. As this closely corresponds to what is usually referred to as a map or a dictionary in most programming languages, the term object may seem like a bit of a misnomer here, arising from JSONs background as a subset of JavaScript. Whether or not the fields of an object are ordered is explicitly unspecified by RFC 1759, but \say{Implementations whose behavior does not depend on member ordering will be interoperable in the sense that they will not be affected by these differences.}\cite[6]{RFC7159}
 
 A JSON array is an ordered collection of JSON values. It is worth noting that JSON places no restriction on the types of the values of the array, and as such, it can sometimes be a heterogeneous collection.
 
@@ -189,7 +188,7 @@ A JSON array is an ordered collection of JSON values. It is worth noting that JS
 
 Listing~\ref{lst:json1} shows a basic example of a JSON object. Since JSON objects and arrays can themselves contain objects and arrays, data serialized as JSON can be arbitrarily deeply nested, but as mentioned JSON itself has no support for any kind of references, so there is no possibility of loops or infinite types.
 
-In RFC 7159 it is stated that \say{The representation of numbers is similar to that used in most programming languages.} However, there are some very significant differences to the most normal number types in most programming languages. A number in JSON can be arbitrarily large, and arbitrarily precise. The only actual rule for a number to be valid JSON is that it satisfies the grammar given in the specifications. As this shows, while the specifications are quite simple, this simplicity leads to some complications and pitfalls.
+In RFC 7159 it is stated that \say{the representation of numbers is similar to that used in most programming languages.} However, there are some very significant differences to the most normal number types in most programming languages. A number in JSON can be arbitrarily large, and arbitrarily precise. The only actual rule for a number to be valid JSON is that it satisfies the grammar given in the specifications. As this shows, while the specifications are quite simple, this simplicity leads to some complications and pitfalls.
 
 A JSON string resembles string literals in many programming languages, with characters and escape sequences, like \icode{{\textbackslash}n} or \icode{{\textbackslash}u000a}, enclosed in quotation marks. As seen from the grammar, strings serve double duty in JSON as both object keys and general values. This means that many possible JSON keys can be quite challenging to map to valid identifiers in a programming language. It is for example perfectly valid to have an object with the keys ‹""›, ‹" "› and ‹"µ"›.
 
@@ -215,7 +214,7 @@ print(parsed["phoneNumbers"][0]["areaCode"])
 \label{lst:readjsonpy}
 \end{listing}
 
-In dynamically typed programming languages reading data from deserialized JSON is relatively straightforward, as seen in Listings~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy}, showing parsing and reading in JavaScript and Python\footnote{It is also possible in Python to get the JSON deserialized into such forms that its syntax become more like the direct field access of JavaScript, but the code shown uses the default behaviour.} respectively. The code in these Listings can, however, fail at runtime with exceptions or errors if the deserialized data does not match expectations. So in many real world use cases the code will be a bit more complex.
+In dynamically typed programming languages reading data from deserialized JSON is relatively straightforward, as seen in Listings~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy}, showing parsing and reading in JavaScript and Python\footnote{It is also possible in Python to get the JSON deserialized into such forms that its syntax become more like the direct field access of JavaScript, but the code shown uses the default behaviour.} respectively. The code in these Listings can, however, fail at runtime with exceptions or errors if the deserialized data does not match expectations, e.g. if the field ‹"phoneNumbers"› is missing, or contains a number instead of an array. So in many real world use cases the code will be a bit more complex, to deal with such problems without crashing.
 
 \subsection{Reading JSON in statically typed languages}
 
@@ -329,9 +328,9 @@ Listing~\ref{lst:readjsonrs3} shows an example of using such custom data types w
 \section{Type providers}
 \label{sec:type-providers}
 
-Solving this problem is of course something that has been thought about before. F\# is an open source, statically typed, functional programming language for the Common Language Runtime with an ML-like surface syntax. In version 3.0 of F\# a concept called \say{type providers} was introduced.
+Solving the problem of convenient, type-safe access to external resources is of course something that has been thought about before this thesis. F\# is an open source, functional programming language for the Common Language Runtime. Like Rust it is statically typed, and draws inspiration from the ML-family of languages. In version 3.0 of F\# a concept called \say{type providers} was introduced.
 
-A type provider provides convenient, type-safe access to an external, potentially complex resource, in a statically typed programming language. As the name suggests the type provider \say{provides} the necessary custom types, letting the programmer access the resource without having to spell out the type information.
+As the name suggests the type provider \say{provides} the necessary custom types to the compiler, letting the programmer access the resource without having to spell out the type information manually.
 
 \begin{listing}[ht!]
 \begin{minted}{fsharp}
@@ -368,7 +367,7 @@ The compiler also provides functionality that makes it easy for implementors of 
 So what \emph{is} a type provider? How do they work? From an implementation standpoint, support for type providers can be boiled down to two features:
 
 \begin{itemize}
-  \item Compile-time meta-programming with access to side effects\footnote{The paper \emph{Dependent Type Providers}\cite{dependent-type-providers}, which shows the use of dependent types in Idris to create type providers, shows that this should possibly be formulated as \say{type creation abilities with side effects}.}, with the expressiveness of a full programming language.
+  \item Compile-time meta-programming with access to side effects\footnote{The paper \emph{Dependent Type Providers}\cite{dependent-type-providers}, which shows the use of dependent types in the Idris programming language to create type providers, shows that \say{compile-time meta-programming with access to side effects} could possibly be replaced with \say{type creation abilities with side effects}.}, with the expressiveness of a full programming language.
   \item Support for thunks, i.e. lazy or delayed evaluation, of at least parts of the abstract syntax tree, and letting such thunks be made by compile-time meta-programming.
 \end{itemize}
 
@@ -389,7 +388,7 @@ In F\# type provider implementations it is possible to add type members as thunk
 
 A good example of a type provider which makes use of this functionality is the WorldBank type provider in \fsharpdata. As the name suggests, it provides access to the World Bank data catalog via its web API. Figure~\ref{fig:worldbank-autocomplete} shows a screenshot of the kind of autocomplete that is available when using the type provider. Having such functionality makes it quick and easy to dive into the data, and it would be very hard, or impossible, to replicate without some sort of strategy for only generating what is necessary.
 
-While thunks as parts of generated types is clearly a very powerful feature, many of F\#s type providers are not reliant on it. If it is feasible to have all the necessary data available at once, and the generated type is not too large, delayed production of the code is not required. For example the ‹JsonProvider› from \fsharpdata\ which creates a single type hierarchy from a limited set of samples, does not need thunks. In other words, something like type providers like ‹JsonProvider› \emph{should} be possible in Rust. In chapter~\ref{chap:project-presentation} I will show how I have attempted to achieve this, but let us first look at the advantages and disadvantages of the type providers it is inspired by.
+While thunks as parts of generated types is clearly a very powerful feature, many of F\#s type providers are not reliant on it. If it is feasible to have all the necessary data available at once, and the generated type is not too large, delayed production of the code is not required. For example the ‹JsonProvider› from \fsharpdata\ which creates a single type hierarchy from a limited set of samples, does not need thunks. In other words, something like ‹JsonProvider› \emph{should} be possible in Rust. In chapter~\ref{chap:project-presentation} I will show how I have attempted to achieve this, but let us first look at the advantages and disadvantages of the type providers it is inspired by.
 
 \subsection{Advantages of F\#s type providers}
 

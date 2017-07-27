@@ -129,7 +129,7 @@ use vector::*;
 \label{lst:hack-workaround}
 \end{listing}
 
-In my testing thus far I have not had a use case where I needed to work around this limitation. If necessary the easiest way to work around is to wrap the macro invocation in module scopes, as shown in Listing~\ref{lst:hack-workaround}, and if desired import the created types. Another workaround is to write the code the pattern-based macro expands to, and use «json_typegen_derive» directly. However, in the near future, no hack should be needed at all as function-like procedural macros become available on the stable compiler\footnote{Tracking issue for procedural macros: \url{https://github.com/rust-lang/rust/issues/38356}}. For users of «json_typegen» this change will most likely be unnoticeable, with no change to the exposed API.
+In my testing thus far I have not encountered a use case where I needed to work around this limitation. If necessary the easiest way to work around is to wrap the macro invocation in module scopes, as shown in Listing~\ref{lst:hack-workaround}, and if desired import the created types. Another workaround is to write the code the pattern-based macro expands to, and use «json_typegen_derive» directly. However, in the near future, no hack should be needed at all as function-like procedural macros become available on the stable compiler\footnote{Tracking issue for procedural macros: \url{https://github.com/rust-lang/rust/issues/38356}}. For users of «json_typegen» this change will most likely be unnoticeable, with no change to the exposed API.
 
 \section{The command-line interface}
 
@@ -499,7 +499,7 @@ If the web interface additionally can output in the macro syntax we get easy tra
   \path[->, dashed] (cli) edge [bend right=20] (macro);
 \end{tikzpicture}
 \vspace{2mm}
-\caption{Transitions enabled by the CLI and the web interface being able to read, and web interface being able to write, macro syntax. The dashed lines show transitions that require the use of the macro syntax as the configuration format, and not just as the interchange format.}
+\caption[Transitions from reading and writing macro syntax]{Transitions enabled by the CLI and the web interface being able to read, and web interface being able to write, macro syntax. The dashed lines show transitions that require the use of the macro syntax as the configuration format, and not just as the interchange format.}
 \label{fig:transitions}
 \end{figure}
 

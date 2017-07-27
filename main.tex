@@ -140,9 +140,16 @@
 \includepdf[pages={-}]{forside.pdf}
 \setcounter{page}{5}
 
+\pdfbookmark[0]{Front matter}{bm-frontmatter}
+\pdfbookmark[1]{Contents}{bm-toc}
 \tableofcontents
 
+\cleardoublepage
+\pdfbookmark[1]{List of Listings}{bm-listings}
 \listoflistings
+
+\cleardoublepage
+\pdfbookmark[1]{List of Figures}{bm-figures}
 \listoffigures
 
 \cleardoublepage
