@@ -292,7 +292,7 @@ In the basic algorithm, if the least upper bound given by $\csh(\sigma_1, \sigma
 
 % TODO: HTML or XML example
 
-This extension is absolutely vital for making the algorithm work well with XML and HTML. In these formats heterogeneous collections with easily disambiguated types are abundant. For «json_typegen», the extension is still useful, but less important than some other extensions.
+This extension is absolutely vital for making the algorithm work well with XML and HTML. In these formats heterogeneous collections with easily disambiguated types are abundant. For «json_typegen», the extension would still be useful, but not essential, as ‹serde_json::Value› provides a decent fallback type as long as «json_typegen» is specific to JSON.
 
 \subsection{JSON pointer hints and configuration}
 \label{sec:ext-json-pointers}
@@ -303,7 +303,8 @@ Actually applying these options require some modifications to the basic version 
 
 The pointer options must then be threaded through our inference and code generation functions, and applied as they match.
 
-A pointer option is a 3-tuple of a pointer, an option name, and an option value. For applying the option we transform the pointer into a list of keys. E.g. the pointer ‹"/field1/field2"› is converted to the list of keys $[‹"field1"›, ‹"field2"›]$. For
+A pointer option is a 3-tuple of a pointer, an option name, and an option value. For applying the option we transform the pointer into a list of tokens. E.g. the pointer ‹"/field1/field2"› is converted to the list of tokens $[‹"field1"›, ‹"field2"›]$. For each recursive call of e.g. the $\shap$ function, the first token of each pointer is removed and tested on e.g. the field name to see if the hint should be carried on to the inner call. If a list of keys is empty, then the hint applies to the current value.
+
 
 
 % some in inference, some as intermediate steps, some for code generation

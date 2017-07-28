@@ -149,7 +149,7 @@ In appendix~\ref{app:cargo-cpp-comparison} I have included a comparison of setti
 \section{JSON}
 \label{sec:json}
 
-JSON is a text-based data format for structured data. It is very commonly used as a data interchange format in modern HTTP-based architectures. JSON was originally based on a subset of the JavaScript programming language, but is designed to be language-independent and is now used in the interaction between applications written in practically all programming languages.
+JSON is a text-based data format for structured data. It is very commonly used as a data interchange format in modern HTTP-based architectures, but also in various other use cases like configuration files. JSON was originally based on a subset of the JavaScript programming language, but is designed to be language-independent and is now used in the interaction between applications written in practically all programming languages.
 
 \begin{listing}[ht!]
 \begin{align*}
@@ -230,7 +230,7 @@ For my examples I will use Rust, but first I need to introduce «Serde»:
 
 «Serde» works by providing two traits, ‹Serialize› and ‹Deserialize›, that Rust types can implement. The core library has already implemented these traits for the most common data types like ‹i64›, ‹String›, ‹Vec› and ‹HashMap›. In addition, the crate «serde_derive» provides code for deriving ‹Serialize› and ‹Deserialize› for custom -- i.e. your own -- types.
 
-Once a Rust type implements the necessary trait, data can be converted with the various format specific crates, that provide implementations for one or both of the traits «Serializer» and «Deserializer». «serde_json» \cite{serdejson} provides implementations of these types for JSON. It also provides some other functionality that is useful for working with JSON.
+Once a Rust type implements the necessary trait, data can be converted with the various format specific crates, that provide implementations for one or both of the traits «Serializer» and «Deserializer». «serde_json» \cite{serdejson} provides implementations of these types for JSON. It also provides some other functionality that is useful for working with JSON, such as helper functions, a macro for creating arbitrary JSON, and a catchall type for JSON values.
 
 \subsubsection{Catchall types}
 
@@ -249,16 +249,19 @@ enum Value {
 \label{lst:valueenum}
 \end{listing}
 
-Listing~\ref{lst:valueenum} shows the Rust type ‹Value› from the library «serde_json». Any legal JSON can be encoded by this type. Similar types can be created in most programming languages. However, working with such types in a type-safe manner can be both tedious and error-prone. The code in Listing~\ref{lst:readjsonrs1} does approximately the same thing as the code in Listings~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy}, using pattern matching. While the code is type-safe and will not fail at runtime, it is not particularly convenient.
+Listing~\ref{lst:valueenum} shows the enumerated type ‹Value› from the library «serde_json», which is this catchall type. In other words can any legal JSON value can be represented by this single type. Similar types can be created in most statically typed programming languages. However, working with such types in a type-safe manner can be both tedious and error-prone, when trying to get some specific data. The code in Listing~\ref{lst:readjsonrs1} does approximately the same thing as the code in Listings~\ref{lst:readjsonjs} and~\ref{lst:readjsonpy}, using pattern matching\footnote{And for now, ignoring the helper functions provided by «serde_json»}. While the code is type-safe and will not fail at runtime, and the code verifies our assumptions about the structure of the data while unwrapping, it is not particularly convenient to write.
 
 \begin{listing}[ht!]
 \begin{minted}{rust}
 let parsed: Value = serde_json::from_str(json_str)?;
 
-if let Some(array) = parsed.get("phoneNumbers") {
-    if let Some(obj) = array.get(0) {
-        if let Some(num) = obj.get("areaCode") {
-            println!("{}", num);
+use Value::*;
+if let Object(map) = parsed {
+    if let Some(Array(vec)) = map.get("phoneNumbers") {
+        if let Some(Object(map)) = vec.get(0) {
+            if let Some(Number(num)) = map.get("areaCode") {
+                println!("{}", num);
+            }
         }
     }
 }
@@ -273,7 +276,7 @@ if let Some(array) = parsed.get("phoneNumbers") {
 %     println!("{}", num);
 % }
 
-\subsubsection{Stringly typed code}
+\subsubsection{More weakly typed approaches}
 
 One way to make the catchall types easier to work with is to create helpers that essentially skips individual checking of each field access. Listing~\ref{lst:readjsonrs2} shows two alternative ways to read from the parsed data.
 
@@ -291,11 +294,11 @@ if let Some(num) = parsed.pointer("/phoneNumbers/0/areaCode") {
 \label{lst:readjsonrs2}
 \end{listing}
 
-The first way shows how it is possible to use indexing syntax -- ‹container[index]› -- with the ‹Value› type, due to the fact that it implements the ‹Index› trait. In other words, very similarly to the syntax one would use with e.g. the default Python solution. While index expressions in Rust \emph{can} panic, the shown expression will actually not do so, as the ‹Value› implementation of the ‹Index› trait instead returns ‹Value::Null› if indexing fails. This does, however, conflate when indexing fails and when the data contains an actual ‹Null› value.
+The first way shows how it is possible to use indexing syntax -- ‹container[index]› -- with the ‹Value› type, due to the fact that it implements the ‹Index› trait. In other words, very similarly to the syntax one would use with e.g. the default Python solution. While index expressions in Rust \emph{can} panic, the shown expression will actually not do so, as the ‹Value› implementation of the ‹Index› trait instead returns ‹Value::Null› if indexing fails. This does, however, conflate when indexing fails, or even makes no sense at all, and when the data contains an actual ‹Null› value. E.g. trying to read the fourth element of ‹false› would return ‹Null›, behavior that is not normally expected in a strongly typed language.
 
-The second approach shown instead uses a string, which encodes a path\footnote{The path is encoded as a JSON Pointer. We will come back to JSON Pointers in more detail in section~\ref{sec:json-pointers}.}, to combine multiple ‹get()› calls into a single function call. This call returns an ‹Option› to distinguish between ‹Null› values and lookup failure, but is otherwise quite similar.
+The second approach shown instead uses a string, which encodes a path\footnote{The path is encoded as a JSON Pointer. We will come back to JSON Pointers in more detail in section~\ref{sec:json-pointers}.}, to combine multiple ‹get()› calls into a single function call. This call returns an ‹Option› to distinguish between ‹Null› values and lookup failure, but is otherwise quite similar to the indexing method.
 
-Neither of these approaches, nor the first approach with the individual ‹get()› calls actually gives us a number in the form of an integer, though. What we actually get is\footnote{Assuming the input was the string in Listing~\ref{lst:json1}.} a ‹Value::Number(Number { ... })› which means that if we wanted to do something else than just printing it, our code would still have some unwrapping to do. And with all this, if we misspell a field, we may not even know that the code failed at runtime because of a typo and not some problem with the data.
+Neither of these approaches, nor the first approach with the individual ‹get()› calls actually gives us a number in the form of a Rust integer (‹i64›), though. What we actually get is\footnote{Assuming the input was actually the string in Listing~\ref{lst:json1}.} a ‹Value::Number(Number { ... })› which means that if we wanted to do something else than just printing it, our code would still have some unwrapping to do. And with all this, if we misspell a field, we may not even know that the code failed at runtime because of a typo and not some problem with the data\footnote{This encoding of data access in strings rather than in the type system, leads some to jokingly refer to this as a \say{stringly} typed, rather than a strongly typed, approach.}.
 
 \subsubsection{Custom types}
 
