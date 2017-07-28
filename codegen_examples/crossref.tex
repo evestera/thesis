@@ -1,0 +1,260 @@
+\section{CrossRef DOI API}
+
+API documentation: \url{https://github.com/CrossRef/rest-api-doc} \\
+Sample source: \url{https://api.crossref.org/works/10.1145/2908080.2908115/}
+
+\subsubsection{JSON Sample}
+
+\begin{multicols}{2}
+\begin{minted}[breaklines, fontsize=\scriptsize]{json}
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "indexed": { "date-parts": [[2017, 7, 25]], "date-time": "2017-07-25T04:31:32Z", "timestamp": 1500957092169 },
+    "publisher-location": "New York, New York, USA",
+    "reference-count": 26,
+    "publisher": "ACM Press",
+    "license": [
+      {
+        "URL": "http://www.acm.org/publications/policies/copyright_policy#Background",
+        "start": { "date-parts": [[2016, 6, 13]], "date-time": "2016-06-13T00:00:00Z", "timestamp": 1465776000000 },
+        "delay-in-days": 164,
+        "content-version": "vor"
+      }
+    ],
+    "content-domain": { "domain": [ ], "crossmark-restriction": false },
+    "short-container-title": [ ],
+    "published-print": { "date-parts": [[2016]] },
+    "DOI": "10.1145/2908080.2908115",
+    "type": "proceedings-article",
+    "created": { "date-parts": [[2016, 6, 2]], "date-time": "2016-06-02T19:23:42Z", "timestamp": 1464895422000 },
+    "source": "Crossref",
+    "is-referenced-by-count": 0,
+    "title": ["Types from data: making structured data first-class citizens in F#"],
+    "prefix": "10.1145",
+    "author": [
+      { "given": "Tomas", "family": "Petricek", "affiliation": [{ "name": "University of Cambridge, UK" }] },
+      { "given": "Gustavo", "family": "Guerra", "affiliation": [{ "name": "Microsoft, UK" }] },
+      { "given": "Don", "family": "Syme", "affiliation": [{ "name": "Microsoft Research, UK" }] }
+    ],
+    "member": "320",
+    "reference": [
+      {
+        "key": "key-10.1145/2908080.2908115-1",
+        "unstructured": "L. Cardelli and J. C. Mitchell. Operations on Records. In Mathematical Foundations of Programming Semantics, pages 22&#8211;52. Springer, 1990.",
+        "DOI": "10.1007/BFb0040253",
+        "doi-asserted-by": "crossref"
+      },
+      {
+        "key": "key-10.1145/2908080.2908115-2",
+        "unstructured": "A. Chlipala. Ur: Statically-typed Metaprogramming with Type-level Record Computation. In ACM SIGPLAN Notices, volume 45, pages 122&#8211;133. ACM, 2010."
+      }
+    ],
+    "event": {
+      "name": "the 37th ACM SIGPLAN Conference",
+      "location": "Santa Barbara, CA, USA",
+      "sponsor": ["SIGPLAN, ACM Special Interest Group on Programming Languages"],
+      "acronym": "PLDI 2016",
+      "number": "37",
+      "start": { "date-parts": [[2016, 6, 13]] },
+      "end": { "date-parts": [[2016, 6, 17]] }
+    },
+    "container-title": [
+      "Proceedings of the 37th ACM SIGPLAN Conference on Programming Language Design and Implementation - PLDI 2016"
+    ],
+    "original-title": [ ],
+    "deposited": { "date-parts": [[2017, 6, 24]], "date-time": "2017-06-24T15:39:00Z", "timestamp": 1498318740000 },
+    "score": 1,
+    "subtitle": [ ],
+    "short-title": [ ],
+    "issued": { "date-parts": [[2016]] },
+    "ISBN": ["9781450342612"],
+    "references-count": 26,
+    "URL": "http://dx.doi.org/10.1145/2908080.2908115",
+    "relation": { "cites": [ ] }
+  }
+}
+\end{minted}
+\end{multicols}
+
+\subsubsection{Generated code}
+
+\begin{multicols}{2}
+\begin{minted}[breaklines, fontsize=\scriptsize]{rust}
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct CrossRefMetadata {
+    status: String,
+    #[serde(rename = "message-type")]
+    message_type: String,
+    #[serde(rename = "message-version")]
+    message_version: String,
+    message: Message,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct Message {
+    indexed: Indexed,
+    #[serde(rename = "publisher-location")]
+    publisher_location: String,
+    #[serde(rename = "reference-count")]
+    reference_count: i64,
+    publisher: String,
+    license: Vec<License>,
+    #[serde(rename = "content-domain")]
+    content_domain: ContentDomain,
+    #[serde(rename = "short-container-title")]
+    short_container_title: Vec<::serde_json::Value>,
+    #[serde(rename = "published-print")]
+    published_print: PublishedPrint,
+    #[serde(rename = "DOI")]
+    doi: String,
+    #[serde(rename = "type")]
+    type_field: String,
+    created: Created,
+    source: String,
+    #[serde(rename = "is-referenced-by-count")]
+    is_referenced_by_count: i64,
+    title: Vec<String>,
+    prefix: String,
+    author: Vec<Author>,
+    member: String,
+    reference: Vec<Reference>,
+    event: Event,
+    #[serde(rename = "container-title")]
+    container_title: Vec<String>,
+    #[serde(rename = "original-title")]
+    original_title: Vec<::serde_json::Value>,
+    deposited: Deposited,
+    score: i64,
+    subtitle: Vec<::serde_json::Value>,
+    #[serde(rename = "short-title")]
+    short_title: Vec<::serde_json::Value>,
+    issued: Issued,
+    #[serde(rename = "ISBN")]
+    isbn: Vec<String>,
+    #[serde(rename = "references-count")]
+    references_count: i64,
+    #[serde(rename = "URL")]
+    url: String,
+    relation: Relation,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct Indexed {
+    #[serde(rename = "date-parts")]
+    date_parts: Vec<Vec<i64>>,
+    #[serde(rename = "date-time")]
+    date_time: String,
+    timestamp: i64,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct License {
+    #[serde(rename = "URL")]
+    url: String,
+    start: Start,
+    #[serde(rename = "delay-in-days")]
+    delay_in_days: i64,
+    #[serde(rename = "content-version")]
+    content_version: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct Start {
+    #[serde(rename = "date-parts")]
+    date_parts: Vec<Vec<i64>>,
+    #[serde(rename = "date-time")]
+    date_time: String,
+    timestamp: i64,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct ContentDomain {
+    domain: Vec<::serde_json::Value>,
+    #[serde(rename = "crossmark-restriction")]
+    crossmark_restriction: bool,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct PublishedPrint {
+    #[serde(rename = "date-parts")]
+    date_parts: Vec<Vec<i64>>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct Created {
+    #[serde(rename = "date-parts")]
+    date_parts: Vec<Vec<i64>>,
+    #[serde(rename = "date-time")]
+    date_time: String,
+    timestamp: i64,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct Author {
+    given: String,
+    family: String,
+    affiliation: Vec<Affiliation>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct Affiliation {
+    name: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct Reference {
+    key: String,
+    unstructured: String,
+    #[serde(rename = "DOI")]
+    doi: Option<String>,
+    #[serde(rename = "doi-asserted-by")]
+    doi_asserted_by: Option<String>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct Event {
+    name: String,
+    location: String,
+    sponsor: Vec<String>,
+    acronym: String,
+    number: String,
+    start: Start2,
+    end: End,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct Start2 {
+    #[serde(rename = "date-parts")]
+    date_parts: Vec<Vec<i64>>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct End {
+    #[serde(rename = "date-parts")]
+    date_parts: Vec<Vec<i64>>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct Deposited {
+    #[serde(rename = "date-parts")]
+    date_parts: Vec<Vec<i64>>,
+    #[serde(rename = "date-time")]
+    date_time: String,
+    timestamp: i64,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct Issued {
+    #[serde(rename = "date-parts")]
+    date_parts: Vec<Vec<i64>>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct Relation {
+    cites: Vec<::serde_json::Value>,
+}
+\end{minted}
+\end{multicols}

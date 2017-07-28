@@ -11,10 +11,26 @@
 \newpage
 \rustfile[firstline=88]{code/shape_inference/src/lib.rs}
 
+%\usepackage[includeheadfoot, inner=3.5cm, outer=3.5cm]{geometry}
+\newgeometry{inner=3cm, outer=2.5cm, top=4cm, bottom=3cm}
+\fancyhfoffset[E,O]{0pt}
+
 \chapter{Examples of generated Rust types}
 \label{app:examples-generated-types}
 
+This appendix contains examples of the result of using the code generation of «json_typegen» on various real-world JSON samples.
 
+The JSON shown may be abridged, where such changes do not affect the inference results. E.g. an array with 50 elements may have been reduced to only 2 or 3.
+
+\newpage
+\input{codegen_examples/crossref.tex}
+\newpage
+\input{codegen_examples/steamnews.tex}
+\newpage
+\input{codegen_examples/worldbank.tex}
+
+\restoregeometry{}
+\fancyhfoffset[E,O]{0pt}
 
 \chapter{Comparison of project setup with dependencies in Rust and C++}
 \label{app:cargo-cpp-comparison}

@@ -1,0 +1,78 @@
+\section{Steam Store News}
+
+API documentation: \url{https://developer.valvesoftware.com/wiki/Steam_Web_API} \\
+Sample source: \url{http://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid=252950&count=2&maxlength=150}
+
+\subsubsection{JSON Sample}
+
+\begin{multicols}{2}
+\begin{minted}[breaklines, fontsize=\scriptsize]{json}
+{
+  "appnews": {
+    "appid": 252950,
+    "newsitems": [
+      {
+        "gid": "2079952210065770645",
+        "title": "DreamHack Atlanta Rocket League Championship Preview",
+        "url": "http://store.steampowered.com/news/externalpost/steam_community_announcements/2079952210065770645",
+        "is_external_url": true,
+        "author": "Dirkened",
+        "contents": "https://rocketleague.media.zestyio.com/DreamHack-Atlanta.c6e1dc555a6eff57c623d9877706c9a5.jpg With the conclusion of the FACEIT X Games Rocket League ...",
+        "feedlabel": "Community Announcements",
+        "date": 1500498351,
+        "feedname": "steam_community_announcements",
+        "feed_type": 1,
+        "appid": 252950
+      },
+      {
+        "gid": "2472890725411073707",
+        "title": "RLCS Season 4 Kicks Off this August",
+        "url": "http://store.steampowered.com/news/externalpost/steam_community_announcements/2472890725411073707",
+        "is_external_url": true,
+        "author": "Dirkened",
+        "contents": "https://rocketleague.media.zestyio.com/rlcs_screen--1-.c6e1dc555a6eff57c623d9877706c9a5.png Just six weeks ago, we were celebrating the Rocket League ...",
+        "feedlabel": "Community Announcements",
+        "date": 1500313284,
+        "feedname": "steam_community_announcements",
+        "feed_type": 1,
+        "appid": 252950
+      }
+    ],
+    "count": 341
+  }
+}
+\end{minted}
+\end{multicols}
+
+\subsubsection{Generated code}
+
+\begin{multicols}{2}
+\begin{minted}[breaklines, fontsize=\scriptsize]{rust}
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct SteamAppNews {
+    appnews: Appnews,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct Appnews {
+    appid: i64,
+    newsitems: Vec<Newsitem>,
+    count: i64,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct Newsitem {
+    gid: String,
+    title: String,
+    url: String,
+    is_external_url: bool,
+    author: String,
+    contents: String,
+    feedlabel: String,
+    date: i64,
+    feedname: String,
+    feed_type: i64,
+    appid: i64,
+}
+\end{minted}
+\end{multicols}

@@ -1,0 +1,82 @@
+\section{World Bank Indicator}
+
+API documentation: \url{https://datahelpdesk.worldbank.org/knowledgebase/topics/125589} \\
+Sample source: \url{http://api.worldbank.org/countries/no/indicators/NY.GDP.MKTP.CD?format=json}
+
+\begin{multicols}{2}
+
+\subsubsection{JSON Sample}
+
+\begin{minted}[breaklines, fontsize=\scriptsize]{json}
+[
+  { "page": 1, "pages": 2, "per_page": "50", "total": 57 },
+  [
+    {
+      "indicator": {
+        "id": "NY.GDP.MKTP.CD",
+        "value": "GDP (current US$)"
+      },
+      "country": { "id": "NO", "value": "Norway" },
+      "value": "386383919342.271",
+      "decimal": "0",
+      "date": "2009"
+    },
+    {
+      "indicator": {
+        "id": "NY.GDP.MKTP.CD",
+        "value": "GDP (current US$)"
+      },
+      "country": { "id": "NO", "value": "Norway" },
+      "value": "461946808510.638",
+      "decimal": "0",
+      "date": "2008"
+    },
+    {
+      "indicator": {
+        "id": "NY.GDP.MKTP.CD",
+        "value": "GDP (current US$)"
+      },
+      "country": { "id": "NO", "value": "Norway" },
+      "value": "400883873279.083",
+      "decimal": "0",
+      "date": "2007"
+    }
+  ]
+]
+\end{minted}
+%\end{multicols}
+
+\subsubsection{Generated code}
+
+%\begin{multicols}{2}
+\begin{minted}[breaklines, fontsize=\scriptsize]{rust}
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct WorldBankIndicator {
+    page: i64,
+    pages: i64,
+    per_page: String,
+    total: i64,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct WorldBankIndicator2 {
+    indicator: Indicator,
+    country: Country,
+    value: String,
+    decimal: String,
+    date: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct Indicator {
+    id: String,
+    value: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct Country {
+    id: String,
+    value: String,
+}
+\end{minted}
+\end{multicols}
