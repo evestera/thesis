@@ -8,24 +8,22 @@
 \end{picture}
 \vspace{-1cm}
 
-When programmers write programs that access external data in a statically typed programming language, they are often faced with a dilemma between convenience and type-safe access to the data they wish to use. For type-safe access, significant boiler-plate code or types must usually be written.
+Whether communicating with an API, reading configuration files, or using a static dataset, most modern programs at some point have to interact with external data sources. And with the rise of micro-services it is not uncommon to have to access data from many such external data sources in a single program. When programmers write code that accesses external data in a statically typed programming language, they are often faced with a dilemma between convenience and type-safety. For type-safe access to external data, significant boiler-plate in the form of code with abundant checks or a large amount of custom types must usually be written. While approaches that avoid this boiler-plate often abandons many of the benefits of static types.
 
-In the programming language F\#, a concept called type providers has been proposed as a solution to this problem by having compiler support for libraries with the capability to generate custom types that reflect the external data, at compile time.
+In the programming language F\#, a concept called type providers has been proposed as a solution to this problem by having compiler support for libraries with the capability to generate custom types, based on the external data, at compile time. With this method, a type provider offers access to external, potentially complex resources, in a way that is both convenient and type-safe.
 
-This thesis presents «json_typegen», a project which aims to show the feasibility of similar solutions in the Rust programming language. The project uses compile-time metaprogramming along with alternative interfaces to the same code generation implementation to achieve convenient, type-safe access to data in the JSON data format. While the presented project provides support for JSON specifically, the approach, and much of the code used by «json_typegen» can also ber used for other data formats and sources.
+This thesis presents «json_typegen», a project which aims to show the feasibility of similar solutions in the Rust programming language. The project uses compile-time metaprogramming, along with alternative interfaces to the same code generation implementation, to achieve convenient, type-safe access to data in the JSON data format, in a way similar to the type providers of F\#. The presented project provides support for the very common JSON format, but the approach, and much of the actual code used by «json_typegen», can be applied to create similar tools for other data formats and sources.
 
-In this chapter we will look at the background for the «json_typegen» project.
+In this introductory chapter we will look at the background for the «json_typegen» project. First, in section~\ref{sec:rust-intro}, we will look at the Rust programming language. Then, in section~\ref{sec:json}, we will look at the JSON data interchange format, and the challenges associated with accessing data in JSON from statically typed programming languages, and Rust in particular. Finally, in section~\ref{sec:type-providers} we will look at how these challenges have been attempted solved with type providers in the programming language F\#.
 
-First, in section~\ref{sec:rust-intro}, we will look at the Rust programming language. Then, in section~\ref{sec:json}, we will look at the JSON data interchange format, and the challenges associated with accessing data in JSON from statically typed programming languages, and Rust in particular. Finally, in section~\ref{sec:type-providers} we will look at how these challenges have been attempted solved with type providers in the programming language F\#.
-
-In chapter~\ref{chap:project-presentation}, the project and its interfaces is presented in detail. And in chapter~\ref{chap:code-generation} we will look at how the code inference and code generation used in the project works.
+In chapter~\ref{chap:project-presentation}, the project and its interfaces is presented in detail. And in chapter~\ref{chap:code-generation} we will look at how the code inference and code generation used in the project works, and ways in which it could be extended.
 
 \section{The Rust programming language}
 \label{sec:rust-intro}
 
 The project presented in the thesis, «json_typegen», creates types for programs written in the Rust programming language, and is itself written in Rust. The Rust programming language is a modern, open source programming language with C-like surface syntax. It is a statically typed language with type inference, with a focus on memory safety and zero-cost abstractions.
 
-Rust does not use a garbage collector and the core library can be used without access to heap allocation. This allows Rust to be used for what is often referred to as \say{systems programming}, e.g. for writing drivers, operating systems and code for microcontrollers. Spaces which has so far been occupied mainly by C and \cpp\footnote{There are \emph{some} other languages that can be said to compete in this area, like Ada, Objective-C and D. I won't go into the details of how these languages compare to Rust, but for various reasons \cpp\ is the main competitor and point of comparison for most use cases.}. Rust tries to combine the low-level control of these languages with modern syntax and an advanced type system that statically prevents whole classes of memory safety issues\cite{the-rust-language}.
+Rust does not use a garbage collector and the core library can be used without access to heap allocation. This allows Rust to be used for what is often referred to as \say{systems programming}, e.g. for writing drivers, operating systems and code for microcontrollers. Spaces which has so far been occupied mainly by C and \cpp\footnote{There are \emph{some} other languages that can be said to compete in this area, like Ada, Objective-C and D. I won't go into the details of how these languages compare to Rust, but for various reasons \cpp\ is the main competitor and point of comparison for most use cases.}. Rust tries to combine the low-level control of these languages with modern syntax and an advanced type system that statically prevents whole classes of memory safety issues \cite{the-rust-language}.
 
 While the basic syntax of Rust can be said to be C-like it also has a lot of functionality and syntax reminiscent of functional languages and in particular languages of the ML-family. Features such as closures, pattern matching and monadic error handling are available and a significant part of idiomatic Rust code.
 
@@ -127,8 +125,8 @@ Declarative macros in Rust are also known as \say{macros by example} or \say{pat
 Procedural macros are macros where the expansion is done by running a procedure rather than by evaluating rules. To create a procedural macro in Rust you create a library that exposes a function that takes a ‹TokenStream› as input and outputs a ‹TokenStream›. Since this library and function can use arbitrary Rust code to generate its output, it can do things that are outside the scope of the normal compiler. Examples of things there are already procedural macro libraries for are:
 
 \begin{itemize}
-  \item Generating a type-safe DSL (at compile time) for communicating with an SQL database, by inspecting said database.\cite{diesel}
-  \item Compiling graphics shaders at Rust compile time.\cite{vulkano}
+  \item Generating a type-safe DSL (at compile time) for communicating with an SQL database, by inspecting said database \cite{diesel}.
+  \item Compiling graphics shaders at Rust compile time \cite{vulkano}.
 \end{itemize}
 
 % Possible expansions here:
@@ -165,10 +163,10 @@ JSON is a text-based data format for structured data. It is very commonly used a
 \label{lst:json-grammar}
 \end{listing}
 
-The format as described by the two official JSON specifications -- IETF RFC 7159\cite{RFC7159} and ECMA 404\cite{ECMA404} -- is intended to be very simple to write and to parse. As can be seen from the grammar in Listing~\ref{lst:json-grammar} a JSON value can only be an object, array, number or string, or one of the literals ‹true›, ‹false› and ‹null›. In addition, there is no way to define new types, references or to specify external resources or definitions.
+The format as described by the two official JSON specifications -- IETF RFC 7159 \cite{RFC7159} and ECMA 404 \cite{ECMA404} -- is intended to be very simple to write and to parse. As can be seen from the grammar in Listing~\ref{lst:json-grammar} a JSON value can only be an object, array, number or string, or one of the literals ‹true›, ‹false› and ‹null›. In addition, there is no way to define new types, references or to specify external resources or definitions.
 % contrast simplicity to XML?
 
-A JSON object is a collection of mappings from keys (that are JSON strings) to JSON values. As this closely corresponds to what is usually referred to as a map or a dictionary in most programming languages, the term object may seem like a bit of a misnomer here, arising from JSONs background as a subset of JavaScript. Whether or not the fields of an object are ordered is explicitly unspecified by RFC 1759, but \say{Implementations whose behavior does not depend on member ordering will be interoperable in the sense that they will not be affected by these differences.}\cite[6]{RFC7159}
+A JSON object is a collection of mappings from keys (that are JSON strings) to JSON values. As this closely corresponds to what is usually referred to as a map or a dictionary in most programming languages, the term object may seem like a bit of a misnomer here, arising from JSONs background as a subset of JavaScript. Whether or not the fields of an object are ordered is explicitly unspecified by RFC 1759, but it states  \cite[6]{RFC7159} that \say{implementations whose behavior does not depend on member ordering will be interoperable in the sense that they will not be affected by these differences.}
 
 A JSON array is an ordered collection of JSON values. It is worth noting that JSON places no restriction on the types of the values of the array, and as such, it can sometimes be a heterogeneous collection.
 
@@ -228,11 +226,11 @@ For my examples I will use Rust, but first I need to introduce «Serde»:
 \subsubsection{Serde}
 \label{sec:serde}
 
-«Serde»\cite{serde} is a Rust framework for serialization and deserialization. The core of the framework is independent of the source/target data format, and the input/output of specific data formats is provided by separate crates.
+«Serde» \cite{serde} is a Rust framework for serialization and deserialization. The core of the framework is independent of the source/target data format, and the input/output of specific data formats is provided by separate crates.
 
 «Serde» works by providing two traits, ‹Serialize› and ‹Deserialize›, that Rust types can implement. The core library has already implemented these traits for the most common data types like ‹i64›, ‹String›, ‹Vec› and ‹HashMap›. In addition, the crate «serde_derive» provides code for deriving ‹Serialize› and ‹Deserialize› for custom -- i.e. your own -- types.
 
-Once a Rust type implements the necessary trait, data can be converted with the various format specific crates, that provide implementations for one or both of the traits «Serializer» and «Deserializer». «serde_json»\cite{serdejson} provides implementations of these types for JSON. It also provides some other functionality that is useful for working with JSON.
+Once a Rust type implements the necessary trait, data can be converted with the various format specific crates, that provide implementations for one or both of the traits «Serializer» and «Deserializer». «serde_json» \cite{serdejson} provides implementations of these types for JSON. It also provides some other functionality that is useful for working with JSON.
 
 \subsubsection{Catchall types}
 
@@ -356,7 +354,7 @@ Listing~\ref{lst:fsharpsample} shows an example of a type provider, ‹JsonProvi
 
 To reiterate: the expression ‹JsonProvider<...>› is evaluated at compile time and provides a type to the compiler. This lets the compiler know the type of, and type check, expressions like ‹simple.Age›, even though the type, or even the existence, of the field ‹Age› is not visible anywhere in the actual F\# code. This is somewhat reminiscent of how type inference lets the compiler lets the compiler know the type of a variable like ‹name› in an expression like ‹let name = "Bob"›, even if the type is not visible in code.
 
-The particular type provider shown, ‹JsonProvider›, comes from the library \fsharpdata\cite{fsharpdata}, which has type providers for multiple formats, and the example is adapted from its documentation\footnote{\url{http://fsharp.github.io/FSharp.Data/library/JsonProvider.html}}. Both the sample string and the string providing the instance could have been replaced by paths to either local or remote resources:
+The particular type provider shown, ‹JsonProvider›, comes from the library \fsharpdata\ \cite{fsharpdata}, which has type providers for multiple formats, and the example is adapted from its documentation\footnote{\url{http://fsharp.github.io/FSharp.Data/library/JsonProvider.html}}. Both the sample string and the string providing the instance could have been replaced by paths to either local or remote resources:
 
 \begin{minted}{fsharp}
 type Simple = JsonProvider<"http://example.com/person.json">
@@ -367,11 +365,11 @@ The compiler also provides functionality that makes it easy for implementors of 
 
 \subsection{Type providers from an implementation standpoint}
 
-So what \emph{is} a type provider? How do they work? From an implementation standpoint, support for type providers can be boiled down to two features:
+So what \emph{is} a type provider? How do they work? From an implementation standpoint, support for type providers can be boiled down to two features \cite{fsharp-themes-info-rich}:
 
 \begin{itemize}
-  \item Compile-time metaprogramming with access to side effects\footnote{The paper \emph{Dependent Type Providers}\cite{dependent-type-providers}, which shows the use of dependent types in the Idris programming language to create type providers, shows that \say{compile-time metaprogramming with access to side effects} could possibly be replaced with \say{type creation abilities with side effects}.}, with the expressiveness of a full programming language.
-  \item Support for thunks, i.e. lazy or delayed evaluation, of at least parts of the abstract syntax tree, and letting such thunks be made by compile-time metaprogramming.
+  \item Compile-time metaprogramming with access to side effects\footnote{The paper \emph{Dependent Type Providers} \cite{dependent-type-providers}, which shows the use of dependent types in the Idris programming language to create type providers, shows that \say{compile-time metaprogramming with access to side effects} could possibly be replaced with \say{type creation abilities with side effects}.}, with the expressiveness of a full programming language.
+  \item Support for thunks, i.e. lazy or delayed evaluation, of at least parts of the representation of these types, and letting such thunks be made by compile-time metaprogramming.
 \end{itemize}
 
 Additionally, for a type provider to make sense, the language has to be statically typed. In a dynamically typed language, the types are associated with the runtime instances of values, so providing extra type information before runtime does not provide much benefit. Since type providers can create a large number of types it is also beneficial if the language has type inference so the actual names of the sub-types are less significant.

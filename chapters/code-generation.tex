@@ -21,7 +21,7 @@ To begin with I will present a basic version of the inference algorithm and code
 \section{Shape inference}
 \label{sec:shape-inference}
 
-The shape inference is based on the algorithms used in \fsharpdata\ as presented in the paper \emph{Types from Data: Making Structured Data First-class Citizens in F\#}\cite{fsharp-types-from-data}. As done in this paper I will use the term shape for the intermediate representation of the inference data, to avoid confusion with actual programming language types.
+The shape inference is based on the algorithms used in \fsharpdata\ as presented in the paper \emph{Types from Data: Making Structured Data First-class Citizens in F\#} \cite{fsharp-types-from-data}. As done in this paper I will use the term shape for the intermediate representation of the inference data, to avoid confusion with actual programming language types.
 
 The goal of the shape inference is to infer generalized shapes from the samples which can then later be used for generating code. These shapes are intended to be general enough to not be tied to inference from JSON -- \fsharpdata\ also does inference for CSV and XML -- and not tied to the generation of any particular type of programming language. Rust code for the basic version of the shape inference can be seen in appendix~\ref{app:inference-code}.
 
@@ -66,7 +66,7 @@ With this change, a separate ‹null› shape, which the original algorithm has,
 
 The main inference function $\shap(\omega)$, shown in Figure~\ref{fig:shap} takes as its input a value and produces a shape. Values containing other values are converted by applying $\shap$ recursively.
 
-$\fold(\textit{function}, \textit{base}, \textit{sequence})$ is the fold operator\cite{fold-tutorial}, common in functional programming (and available on iterators in Rust). In this case, it reduces a sequence of shapes to a single shape by finding a common shape with the $\csh(\sigma_1, \sigma_2)$ function, which we will look at in the next section. The initial shape is $\bot$, which means that an empty ‹Array› will be represented as the shape $\vect{\bot}$.
+$\fold(\textit{function}, \textit{base}, \textit{sequence})$ is the fold operator \cite{fold-tutorial}, common in functional programming (and available on iterators in Rust). In this case, it reduces a sequence of shapes to a single shape by finding a common shape with the $\csh(\sigma_1, \sigma_2)$ function, which we will look at in the next section. The initial shape is $\bot$, which means that an empty ‹Array› will be represented as the shape $\vect{\bot}$.
 
 \subsection{Finding common shapes}
 
@@ -174,7 +174,7 @@ When we are working with optional shapes, we want optionality to be a boolean pr
 \label{fig:cfs}
 \end{figure}
 
-Figure~\ref{fig:cfs} shows how the common shape of two record shapes is found by finding the common shapes of its fields. For keys that are not present in both records, the shape that is present is optional/nullable. Note that in «Types from Data», records have row variables\cite{row-types} so that all records can be considered to have the same keys. To minimize the number of new concepts needed to understand the basic algorithm I have chosen this slightly less elegant notation in Figure~\ref{fig:cfs} instead. Informally, every key present in either of the input record shapes will be present in the output record shape. For every field, if the field is found in both record shapes, the shape of the field in the output is the common shape of the shapes for the corresponding fields in the input. If the field is found in only one of the input shapes, the corresponding field in the output shape must be optional.
+Figure~\ref{fig:cfs} shows how the common shape of two record shapes is found by finding the common shapes of its fields. For keys that are not present in both records, the shape that is present is optional/nullable. Note that in «Types from Data», records have row variables \cite{row-types} so that all records can be considered to have the same keys. To minimize the number of new concepts needed to understand the basic algorithm I have chosen this slightly less elegant notation in Figure~\ref{fig:cfs} instead. Informally, every key present in either of the input record shapes will be present in the output record shape. For every field, if the field is found in both record shapes, the shape of the field in the output is the common shape of the shapes for the corresponding fields in the input. If the field is found in only one of the input shapes, the corresponding field in the output shape must be optional.
 
 \section{Intermediary passes}
 
@@ -188,7 +188,7 @@ Once a shape tree has been inferred from the sample and intermediate passes have
 
 The main function takes as its input some path information, used for naming any generated types, and a shape. The function pattern matches on the shape and produces as its output a tuple: The name of the type representing the shape, and potentially some code generated to declare the returned type.
 
-Code is generated via quasiquotation, using a macro ‹quote!› from the «quote»\cite{quote} library.
+Code is generated via quasiquotation, using a macro ‹quote!› from the «quote»  \cite{quote} library.
 
 % TODO: Expand this section
 
@@ -284,7 +284,7 @@ As have been mentioned earlier, there are several ways to extend this basic setu
 \subsection{Tagged any types}
 \label{sec:tagged-any}
 
-In addition to the basic inference algorithm described in section~\ref{sec:shape-inference}, «Types From Data»\cite{fsharp-types-from-data} also describes an extension it calls \say{labelled top shapes} for providing a better fallback than the general ‹any› shape.
+In addition to the basic inference algorithm described in section~\ref{sec:shape-inference}, «Types From Data» \cite{fsharp-types-from-data} also describes an extension it calls \say{labelled top shapes} for providing a better fallback than the general ‹any› shape.
 
 In the basic algorithm, if the least upper bound given by $\csh(\sigma_1, \sigma_2)$ is ‹any›, we throw away the information we have about why we had to use ‹any›, i.e. $\sigma_1$ and $\sigma_2$. The basic concept of this extension is to instead incorporate this information into a top type $‹anyof(›\sigma_1, {\cdots}, \sigma_n‹)›$. This can then be used in the code generation to e.g. create enumerated types with custom types inside.
 
@@ -381,7 +381,7 @@ However, the only nullable shape we currently have that can be lowered to someth
 
 In most programming languages there is also the consideration of which map type to use. The Rust standard library provides two map types, ‹HashMap› and ‹BTreeMap›. In addition to these alternatives there are various map types in published in crates in the Rust ecosystem. As an example, «json_typegen» itself uses a ‹LinkedHashMap› internally. From the perspective of a user, giving a hint $‹use_type›\ t$ should work with any of the types mentioned above for $t$, as well as just ‹map›, letting «json_typegen» choose the map type.
 
-For the default map type, whatever we choose ends up as essentially a new base type. Both ‹HashMap› and ‹BTreeMap› are good candidates, but as the default I have chosen ‹HashMap›, as it is the recommendation for general maps.\cite[std::collections]{rust-std-docs}. As mentioned, we assume strings as keys, so the full new base type is ‹HashMap<String, T›. With ‹String› fixed as the key type, ‹HashMap› implements all the traits in our derive list and can thus be safely added to our set of base types.
+For the default map type, whatever we choose ends up as essentially a new base type. Both ‹HashMap› and ‹BTreeMap› are good candidates, but as the default I have chosen ‹HashMap›, as it is the recommendation for general maps \cite[std::collections]{rust-std-docs}. As mentioned, we assume strings as keys, so the full new base type is ‹HashMap<String, T›. With ‹String› fixed as the key type, ‹HashMap› implements all the traits in our derive list and can thus be safely added to our set of base types.
 
 % Whatever type json_typegen chooses ends up as part of our base types.
 % HashMap<String, T> implements all of Default, Debug, Clone, PartialEq, Serialize, Deserialize
@@ -406,7 +406,7 @@ Another common pattern of data structure adaption in real world JSON is the use 
 
 To be able to infer tuples we add the tuple shape $\tupl{ \sigma_1, \cdots, \sigma_n, \kappa }$ to our set of shapes, where $ \sigma_1, \cdots, \sigma_n $ are field shapes and $\kappa$ is the count of samples this shape is based on. Figure~\ref{fig:shap-tuple} shows how $\shap(\omega)$ can be modified to infer tuples. The shown rule replaces the original rule for ‹Array›.
 
-A tuple automatically implements all the traits in our default derive list if all the types inside it does\cite[primitive std::tuple]{rust-std-docs}, and so can be safely added to our set of base types. This derive-like functionality only works for tuples with at most 12 fields, so the max inferred tuple arity -- $tmax$ -- should never be set higher than this. In my own opinion, anything beyond 2-tuples and 3-tuples should not be automatically inferred.
+A tuple automatically implements all the traits in our default derive list if all the types inside it does \cite[primitive std::tuple]{rust-std-docs}, and so can be safely added to our set of base types. This derive-like functionality only works for tuples with at most 12 fields, so the max inferred tuple arity -- $tmax$ -- should never be set higher than this. In my own opinion, anything beyond 2-tuples and 3-tuples should not be automatically inferred.
 
 \begin{figure}[ht!]
 \begin{gather*}
