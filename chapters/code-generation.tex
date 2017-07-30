@@ -266,7 +266,7 @@ While the types we generate should match the samples they are generated from, an
 
 If a field has entirely the wrong type, e.g. an object where we expect a number, deserialization has to fail with an error, as discovering such type issues as early as possible is a big part of the reason to deserialize to strong types. There are, however, some types we \emph{could} conceivably coerce between. E.g. the string value ‹"3.5"› could be parsed and coerced into a ‹f64› field. While I have some ideas for extensions for specific instances like strings to number, I have no plans for supporting coercing data at runtime in an ad-hoc fashion.
 
-When it comes to how we handle fields that are either missing or that we never saw in inference there are some choices to be made.
+When it comes to how we handle fields that are either missing, or that were never observed during inference, there are some choices to be made.
 
 \subsubsection{Missing fields}
 
@@ -281,12 +281,12 @@ By default, if «Serde» tries to deserialize and the data has an additional fie
 
 As have been mentioned earlier, there are several ways to extend this basic setup to better align with what handwritten code would look like. We will now look at a few such extensions. For the sake of simplicity, we will mostly not go into the details of how these extensions interact or the complete extended algorithms, focusing instead on each extension by itself.
 
-\subsection{Tagged any types}
+\subsection{Tagged ‹any› shapes}
 \label{sec:tagged-any}
 
 In addition to the basic inference algorithm described in section~\ref{sec:shape-inference}, «Types From Data» \cite{fsharp-types-from-data} also describes an extension it calls \say{labelled top shapes} for providing a better fallback than the general ‹any› shape.
 
-In the basic algorithm, if the least upper bound given by $\csh(\sigma_1, \sigma_2)$ is ‹any›, we throw away the information we have about why we had to use ‹any›, i.e. $\sigma_1$ and $\sigma_2$. The basic concept of this extension is to instead incorporate this information into a top type $‹anyof(›\sigma_1, {\cdots}, \sigma_n‹)›$. This can then be used in the code generation to e.g. create enumerated types with custom types inside.
+In the basic algorithm, if the least upper bound given by $\csh(\sigma_1, \sigma_2)$ is ‹any›, we throw away the information we have about why we had to use ‹any›, i.e. $\sigma_1$ and $\sigma_2$. The basic concept of this extension is to instead incorporate this information into a top shape $‹anyof(›\sigma_1, {\cdots}, \sigma_n‹)›$. This can then be used in the code generation to e.g. create enumerated types with custom types inside.
 
 % TODO: Show how a type generated from an anyof shape could look
 
@@ -294,10 +294,84 @@ In the basic algorithm, if the least upper bound given by $\csh(\sigma_1, \sigma
 
 This extension is absolutely vital for making the algorithm work well with XML and HTML. In these formats heterogeneous collections with easily disambiguated types are abundant. For «json_typegen», the extension would still be useful, but not essential, as ‹serde_json::Value› provides a decent fallback type as long as «json_typegen» is specific to JSON.
 
+\subsection{Detecting distinct object shapes}
+
+One of the reasons why tagged ‹any› shapes are not as useful for JSON as for e.g. XML and HTML is, as mentioned in the previous section, that JSON provides no directly obvious way of disambiguating objects representing different types. There are, however, ways we could infer that two different JSON objects should be interpreted as having different types.
+
+\subsubsection{Intersection of keys}
+
+One indicator that two objects may represent different types is if they have no fields in common, i.e. if the intersection of the sets of keys of two objects is empty. Listing~\ref{lst:objects-no-overlap} shows how two such objects, with no fields in common could be represented as an enumerated type rather than a struct, if tagged ‹any› shapes were also implemented.
+
+\begin{listing}[ht!]
+\textbf{JSON sample input:}
+\begin{minted}{json}
+[
+  { "a": 1 },
+  { "b": 1 }
+]
+\end{minted}
+\vspace{5mm}
+
+\textbf{Two alternative representations:}
+\begin{minted}{rust}
+struct S {
+    a: Option<i32>,
+    b: Option<i32>,
+}
+
+enum E {
+    Variant1 { a: i32 },
+    Variant2 { b: i32 },
+}
+\end{minted}
+\caption{Two ways of representing objects with no overlap}
+\label{lst:objects-no-overlap}
+\end{listing}
+
+This does, however, have the potential to make the inference less intuitive, as different order of objects in an array can lead to completely different inferred types.
+
+Take for instance the JSON array \icode{[\{ "a": 1 \}, \{ "b": 1 \}, \{ "a": 1, "b": 1 \}}. If the array is folded from left to right, i.e. the single-field objects are combined first, there is no intersection of keys, and one might infer a shape corresponding to an enumerated type. It is not obvious how one should proceed after this either, as the two-field object matches both of the existing alternatives equally well. If the array is instead folded from right to left, or the array is re-ordered, a shape corresponding to the struct in Listing~\ref{lst:objects-no-overlap} would be inferred.
+
+\subsubsection{Discriminators}
+
+Another way object types can be disambiguated is if one of the fields acts as a discriminator field or type tag. This is a relatively common pattern in real-world JSON, but neither the existence of a discriminator field, nor the placement nor name of such a field is something one can rely on for inference. The use of a discriminator is thus something that would have to rely on configuration through JSON Pointers.
+
+When discriminator fields \emph{are} available they provide a reliable way to figure out which objects should correspond to which variants, even if instances of a variant do not have the exact same fields. Additionally, they provide an intuitive way to name each variant, providing good usability for the eventually generated types.
+
+\begin{listing}[ht!]
+\textbf{JSON sample with discriminators:}
+\begin{minted}{json}
+[
+  {
+    "type": "foo",
+    "a": 1
+  },
+  {
+    "type": "bar",
+    "b": 1
+  }
+]
+\end{minted}
+\vspace{5mm}
+
+% "/-" discriminator "type"
+
+\textbf{Enumerated type using discriminator values:}
+\begin{minted}{rust}
+enum E {
+    Foo { a: i32 },
+    Bar { b: i32 },
+}
+\end{minted}
+\caption{Enumerated type created from sample with discriminator field/type tags}
+\label{lst:type-tags}
+\end{listing}
+
+
 \subsection{JSON pointer hints and configuration}
 \label{sec:ext-json-pointers}
 
-As outlined in section~\ref{sec:json-pointers} we can use JSON pointers to specify configuration options and hints (hereafter referred to as just options) to the inference that are specific to just a part of the JSON sample.
+As outlined in section~\ref{sec:json-pointers} it would be beneficial if we could use JSON pointers to specify configuration options and hints (hereafter referred to as just options) to the inference and code generation.
 
 Actually applying these options require some modifications to the basic version of the algorithm. However, the options are not all applied the same way or at the same time. Some have to be applied during inference, some are best applied as intermediate transformations between inference and code generation, and some have to be applied during the code generation. This means that while we start with a simple list of options, we have to do some pre-processing of the options before running the algorithm with them.
 
@@ -305,7 +379,47 @@ The pointer options must then be threaded through our inference and code generat
 
 A pointer option is a 3-tuple of a pointer, an option name, and an option value. For applying the option we transform the pointer into a list of tokens. E.g. the pointer ‹"/field1/field2"› is converted to the list of tokens $[‹"field1"›, ‹"field2"›]$. For each recursive call of e.g. the $\shap$ function, the first token of each pointer is removed and tested on e.g. the field name to see if the hint should be carried on to the inner call. If a list of keys is empty, then the hint applies to the current value.
 
-
+% hinted_vts(w, hints) {
+%   for (keys, option, value) in hints:
+%     if keys == []:
+%       apply (option, value)
+%
+%   match w {
+%     Object({k1: w1, ..., kn: w1})) => {{
+%       k1:
+%         hinted_vts(
+%           w1,
+%           map(
+%             filter(
+%               hints,
+%               (keys, option, value) => keys != [] && keys[0] == k1
+%             ),
+%             (keys, option, value) => (keys[1..], option, value)
+%           )
+%         ),
+%       ...,
+%       kn:
+%         hinted_vts(
+%           wn,
+%           map(
+%             filter(
+%               hints,
+%               (keys, option, value) => keys != [] && keys[0] == kn
+%             ),
+%             (keys, option, value) => (keys[1..], option, value)
+%           )
+%         ),
+%     }}
+%     Array(w1, ..., wn) => [[
+%       fold(csh, bottom, [
+%         hinted_vts(w1, map(
+%           filter(hints, (keys, option, value) => keys != []),
+%           (keys, option, value) => (keys[1..], option, value)
+%         ))
+%       ])
+%     ]]
+%   }
+% }
 
 % some in inference, some as intermediate steps, some for code generation
 
@@ -445,41 +559,12 @@ If automatic inference of tuples is disabled, tuple shapes can still be created,
 
 \subsection{Combining identical subtypes}
 
-Finding identical subtypes is the task of finding identical subtrees in our shape tree. A naive approach needs $\binom{n}{2} = \frac{n(n-1)}{2} \in O(n^2)$ comparisons, so care must be taken on implementation. Our shape tree can be considered to be a rooted unordered labelled tree. Finding identical types would still be somewhat useful even if we consider the tree ordered, so this could be done to make initial implementation easier.
+\placeholder{Why would we want this? Point to appendix.}
 
-\placeholder{Inferring types from multiple samples/sample-sets but ensuring that they can still work together. Show how this can already be done to a certain extent using \url{https://github.com/lloydmeta/frunk}}
+Finding identical subtypes is the task of finding identical subtrees in our shape tree. A naive approach needs $\binom{n}{2} = \frac{n(n-1)}{2} \in O(n^2)$ comparisons, where $n$ is the number of nodes in the tree, so care must be taken on implementation. The shape tree can be considered to be a rooted unordered labelled tree. An optimal algorithm for identical subtrees of such a tree can be implemented with complexity $O(n)$.
 
-\subsection{Detection of entirely separate types}
+In addition to finding identical types for a single shape tree i.e. from a single sample, it could also be useful if it was possible to combine identical types across several samples. E.g. if a program interacts with an external API, the API may have several endpoints with different requirements, but with reuse of types. \placeholder{As an example of this, an API for... might...}.
 
-When inferring shapes and generating code based on JSON one has to work with incomplete data. As such it is unavoidable that some choices have to be made. Unfortunately several of these choices do not present any alternative that is clearly better in all cases.
+As we saw in section~\ref{sec:derive-list} it is already possible to use the «frunk» crate to get a level of structural typing and thus convert between types which are nominally different but arose from identical shapes. This of course also applies between types generated from different samples.
 
-\begin{listing}[ht!]
-\begin{minted}{json}
-[
-  {
-    "a": 1
-  },
-  {
-    "b": 1
-  }
-]
-\end{minted}
-\caption{JSON Dilemma \#1}
-\label{lst:json-dilemma-1}
-\end{listing}
-
-\begin{listing}[ht!]
-\begin{minted}{rust}
-struct S {
-    a: Option<i32>,
-    b: Option<i32>,
-}
-
-enum E {
-    A { a: i32 },
-    B { b: i32 },
-}
-\end{minted}
-\caption{JSON Dilemma \#1 - Two solutions}
-\label{lst:json-dilemma-1-rs}
-\end{listing}
+It is also possible to combine multiple samples into a single sample by wrapping them in a JSON object with field names corresponding to the desired type names of the root of each sample. This will, however, only work for inline samples if done by the user. Thus, if such combining of identical subtypes is implemented, it would likely also be useful if «json_typegen» provided a macro which could combine samples in this manner internally, as this combining could then be done after parsing each sample into a ‹serde_json::Value›.
