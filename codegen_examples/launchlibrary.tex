@@ -1,0 +1,57 @@
+\section{Launch Library Launch List}
+\label{app:worldbank}
+
+API documentation: \url{https://launchlibrary.net/1.2/docs/api.html} \\
+Sample source: \url{https://launchlibrary.net/1.2/launch?next=2}
+
+\begin{multicols}{2}
+
+\subsubsection{JSON Sample}
+
+\begin{minted}[breaklines, fontsize=\scriptsize]{json}
+{
+  "total": 2,
+  "launches": [
+    {
+      "id": 1329,
+      "name": "Vega | OptSat 3000 & VENµS (VENUS)",
+      "net": "August 2, 2017 01:58:00 UTC",
+      "tbdtime": 0,
+      "tbddate": 0
+    },
+    {
+      "id": 1233,
+      "name": "Long March 3B/E | Alcomsat-1",
+      "net": "August 5, 2017 00:00:00 UTC",
+      "tbdtime": 1,
+      "tbddate": 1
+    }
+  ],
+  "offset": 0,
+  "count": 2
+}
+\end{minted}
+%\end{multicols}
+
+\subsubsection{Generated code}
+
+%\begin{multicols}{2}
+\begin{minted}[breaklines, fontsize=\scriptsize]{rust}
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct LaunchList {
+    total: i64,
+    launches: Vec<Launch>,
+    offset: i64,
+    count: i64,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct Launch {
+    id: i64,
+    name: String,
+    net: String,
+    tbdtime: i64,
+    tbddate: i64,
+}
+\end{minted}
+\end{multicols}
