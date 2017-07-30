@@ -514,10 +514,10 @@ The way I've described how the procedural macros work in section~\ref{sec:shared
 % MacroString -> (SampleSource, Config)
 % (SampleSource, Config) -> MacroString
 
-% TODO: Have CLI be able to set up conditional compilation. Maybe also web interface?
-
-Due to how beneficial conditional compilation currently is, it could also be quite useful the code required for it could also be generated.
+Due to how beneficial conditional compilation currently is, it could also be quite useful if the code required for using conditional compilation could also be generated automatically. If the code generation was able to output macro syntax, this should be quite easily implementable.
 
 \section{Editor plugins}
 
-\placeholder{Describe idea behind \url{https://github.com/evestera/atom-json-typegen} and superficially how it works/can work.}
+One thought I have had while working on this project is to what extent it matters that it is actually the compiler, and not something else, that actually inserts the provided types into the code of the program. To explore this idea I have created a prototype plugin for the Atom editor\footnote{\url{https://github.com/evestera/atom-json-typegen}}, which expands a macro invocation to the resulting code inside the editor. The plugin just comments out the macro invocation, sends it to the web interface backend, and inserts the result into the buffer. The generated code can be hidden with code folding, so that the macro invocation is the only thing visible, if so desired. Since this process is entirely outside the compiler, no dependencies are added to the project.
+
+Since the generated code is available to the editor, just like it would be if the user had used the command line interface, the editor can use the code for code completion etc. While the plugin is very rudimentary, it illustrates how simple of a concept tooling support for procedural macros could be. If the code did not have to be inserted into the buffer for the editor to be aware of it, such a plugin could just provide what was necessary for full editor support for the procedural macro. Full tooling support for macros, procedural or otherwise, just depends on being able to expand macros to the resulting code, and making this expanded code available to the editor.
