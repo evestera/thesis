@@ -559,11 +559,15 @@ If automatic inference of tuples is disabled, tuple shapes can still be created,
 
 \subsection{Combining identical subtypes}
 
-\placeholder{Why would we want this? Point to appendix.}
+When we generate types with the basic inference and generation, we can end up with many types with exactly the same fields. In appendix~\ref{app:crossref} we can see a real world example of such identical types\footnote{In the example there are two sets of identical types: $\{‹Indexed›, ‹Start›, ‹Created›, ‹Deposited›\}$ and $\{‹PublishedPrint›, ‹Start2›, ‹End›, ‹Issued›\}$. Additionally, the shape of the second set can be considered to be covered by the shape of the first set. Handling such covered shapes automatically is not discussed in this section.}. As mentioned in section~\ref{sec:derive-list}, one of the problems with this is that nominally different types can't be used interchangeably, but it also makes the types harder to understand, and contributes to code bloat.
 
-Finding identical subtypes is the task of finding identical subtrees in our shape tree. A naive approach needs $\binom{n}{2} = \frac{n(n-1)}{2} \in O(n^2)$ comparisons, where $n$ is the number of nodes in the tree, so care must be taken on implementation. The shape tree can be considered to be a rooted unordered labelled tree. An optimal algorithm for identical subtrees of such a tree can be implemented with complexity $O(n)$.
+One way to combine identical shapes to a single type is to let the user specify with JSON Pointer options, if two parts of the sample should correspond to the same type. However, for trivially equal shapes, this is something we should be able to do automatically.
 
-In addition to finding identical types for a single shape tree i.e. from a single sample, it could also be useful if it was possible to combine identical types across several samples. E.g. if a program interacts with an external API, the API may have several endpoints with different requirements, but with reuse of types. \placeholder{As an example of this, an API for... might...}.
+Finding identical subtypes is the task of finding identical subtrees in our shape tree. A naive approach needs $\binom{n}{2} = \frac{n(n-1)}{2} \in O(n^2)$ comparisons, where $n$ is the number of nodes in the tree, so care must be taken on implementation. The shape tree can be considered to be a rooted unordered labelled tree. Unordered, as we want types with the same fields in different order to be considered to be the same. An optimal algorithm for finding identical subtrees of such a tree can be implemented with complexity $O(n)$ \cite{subtree-repeats}.
+
+For considering whether two shapes represent the same field type, the default derived equality operator should not be used. For instance should the shapes $\vect{\bot}$ and $\vect{‹int›}$ be considered equal.
+
+In addition to finding identical types for a single shape tree i.e. from a single sample, it could also be useful if it was possible to combine identical types across several samples. E.g. if a program interacts with an external API, the API may have several endpoints with different requirements, but with reuse of types. As an example of this, an API for web commerce might choose to inline product data both in search results and in endpoints for order data.
 
 As we saw in section~\ref{sec:derive-list} it is already possible to use the «frunk» crate to get a level of structural typing and thus convert between types which are nominally different but arose from identical shapes. This of course also applies between types generated from different samples.
 

@@ -235,7 +235,7 @@ One reason why someone might not want to use the procedural macro at the moment 
 % Conditional compilation means that...
 
 % autocomplete by generated code, but keeping benefits
-To make the generated source available to editors while still keeping the benefits of the procedural macro it is possible to use conditional compilation. Listing~\ref{lst:conditional-compilation} shows an example setup where some pre-generated code is used in the default build, but the pre-generated code is ignored and the procedural macro used instead when a compilation flag is enabled.
+To make the generated source available to editors while still keeping the benefits of the procedural macro it is possible to use conditional compilation. Conditional compilation is the concept of automatically removing parts of the source code before the main compilation, depending on some condition. E.g. removing Windows-specific code when compiling on Linux and vice versa.
 
 \begin{listing}[ht!]
 \textbf{In the source code:}
@@ -265,6 +265,19 @@ $ cargo check --features "online-samples"
 \caption{Conditional compilation}
 \label{lst:conditional-compilation}
 \end{listing}
+
+In Rust conditional compilation is possible with annotations like \icode{\#[cfg(condition)]}. Listing~\ref{lst:conditional-compilation} shows an example where a feature flag ‹"online-samples"› is used to enable use of the procedural macro. In the default build the pre-generated type is used, but if the feature flag is enabled, the pre-generated type is ignored and the procedural macro used instead.
+
+\begin{figure}[ht!]
+\begin{center}
+\includegraphics[width=\textwidth]{intellij_rust_autocomplete}
+\end{center}
+\hspace*{-1.5in} % To get rid of some weird bottom margin
+\caption{Autocomplete from generated types in IntelliJ Rust}
+\label{fig:intellij-rust-autocomplete}
+\end{figure}
+
+Since this method makes the types available to the editor, autocomplete based on the types is now more easily possible. Figure~\ref{fig:intellij-rust-autocomplete} shows autocomplete results that are based on conditionally compiled types in the IntelliJ IDE with the IntelliJ Rust plugin. The JSON sample and generated types for this example can be found in appendix~\ref{app:steamnews}.
 
 % require network access only for verification
 Using conditional compilation in this way also lets us get around the issue of requiring network access to build. If network access is the only issue we care about we don't even need to pre-generate the code, and can instead use two macro invocations -- one with a local or inline sample and one with the remote one -- as our two options.
@@ -438,7 +451,7 @@ json_typegen!("Order", "samples/order.json", {
 \label{lst:macro-with-json-pointer}
 \end{listing}
 
-Listing~\ref{lst:macro-with-json-pointer} shows how a macro invocation with an option specified with a JSON Pointer could look. Here are some examples of possible options that could be specified via JSON Pointers:
+Listing~\ref{lst:macro-with-json-pointer} shows how a macro invocation with an option specified with a JSON Pointer could look. Some examples of possible options that could be specified via JSON Pointers are:
 
 \begin{itemize}
   \item ‹use_type› Specifies a type for the code generation to use, with varying levels of specificity.
