@@ -42,7 +42,7 @@ To be clear about how notation is disambiguated: $[a, b, c]$ is an actual sequen
 For an intuitive understanding of the more abstract shapes it is helpful to think of what kind of knowledge each shape represents. $\bot$ (read as \say{bottom}) represents the complete lack of knowledge about what type should be inferred. $‹optional(›\sigma‹)›$ represents the knowledge that a type may sometimes be ‹null› or a field may not always be there, i.e. that it is nullable or optional. So $‹optional(›\bot‹)›$ tells us that a type is optional, but that we know nothing else of about its type. The ‹any› shape, on the other hand, represents conflicting information. If we end up with the ‹any› shape it means that the information we have received is not representable by any of the other alternatives. E.g. a type that can be both a ‹string› and an ‹int›.
 
 % Differences from algorithm as presented in Types from Data
-Unlike in «Types from Data», to preserve information and let any choice be made in the code generation step, lists\footnote{\ldots\ and with extensions, other collections.} are not considered nullable. In other words, the inference can infer the shape $‹optional(›\vect{\sigma}‹)›$, but it is up to the code generation to decide how to handle the shape. In the default code generation, ‹Option<Vec<T>>› will not be generated, but this can be enabled by configuration (‹optional_collections›).
+Unlike in «Types from Data», to preserve information and let any choice be made in the code generation step, lists\footnote{\ldots\ and with extensions, other collections.} are not considered nullable. In other words, the inference can infer the shape $‹optional(›\vect{\sigma}‹)›$, but it is up to the code generation to decide how to handle the shape. In the default code generation, ‹Option<Vec<T>>› will not be generated, but this can be enabled by configuration.
 
 With this change, a separate ‹null› shape, which the original algorithm has, is no longer necessary. Instead, $\bot$ is not considered nullable either, and $‹optional(›\bot‹)›$ serves the purpose of ‹null›.
 
@@ -184,13 +184,13 @@ We will look at these extensions and their consequences for the algorithm in sec
 
 \section{Generating Rust types}
 
-Once a shape tree has been inferred from the sample and intermediate passes have been run to improve the inferred shapes, the shape tree is used to generate Rust code.
+Once a shape tree has been inferred from the sample and intermediate passes have been run to improve the inferred shapes, the shape tree is used to generate Rust code. The code generation is a simple recursive procedure.
 
 The main function takes as its input some path information, used for naming any generated types, and a shape. The function pattern matches on the shape and produces as its output a tuple: The name of the type representing the shape, and potentially some code generated to declare the returned type.
 
-Code is generated via quasiquotation, using a macro ‹quote!› from the «quote»  \cite{quote} library.
+Appendix~\ref{app:codegen-code} contains a (very) naive implementation of this algorithm. Among other things, this implementation is not configurable and assumes all fields names can be used as Rust field names and Rust type names if the first letter is uppercased. Except for such simplifications, the implementation is similar to the actual code generation in «json_typegen».
 
-% TODO: Expand this section
+In the actual implementation, code is generated via quasiquotation, using a macro ‹quote!› from the «quote» \cite{quote} library. This is quite similar to the use of format strings in the naive implementation, except that the code to generate code is simpler, and that it generates tokens, rather than strings. For our use case, this is actually not entirely positive. When working with just tokens, there is no need to format the code nicely, so when the tokens from «quote» is output as a string, it becomes just one long line. For this reason, a separate formatting step is done, if the code is to be shown to a user. In the future it may be better to choose a simple, custom solution for the equivalent role of «quote», as «json_typegen» generates a rather small subset of Rust.
 
 \subsection{Type and field names}
 
@@ -274,7 +274,7 @@ In the inference we detect potentially missing fields and encode this informatio
 
 \subsubsection{Additional fields}
 
-By default, if «Serde» tries to deserialize and the data has an additional field that the target type does not have, the additional field is just ignored. This matches well with our intent with type providers, in that we only want to check the assumptions we actually make. However, it is also possible to make such additional fields cause deserialization to fail.
+By default, if «Serde» tries to deserialize and the data has an additional field that the target type does not have, the additional field is just ignored. This matches well with our intent with type providers, in that we only want to check the assumptions we actually make. However, it is also possible to make such additional fields cause deserialization to fail, which is behavior users of «json_typegen» can enable through configuration.
 
 \section{Extensions}
 \label{sec:extensions}
