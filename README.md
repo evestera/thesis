@@ -1,5 +1,5 @@
 # Rust types from JSON samples
-#### A macro based approach to type providers in Rust
+#### Approximating type providers with procedural macros in Rust
 
 My thesis about [json_typegen](https://github.com/evestera/json_typegen).
 
