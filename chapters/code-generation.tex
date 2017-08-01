@@ -26,6 +26,7 @@ The shape inference is based on the algorithms used in \fsharpdata\ as presented
 The goal of the shape inference is to infer generalized shapes from the samples which can then later be used for generating code. These shapes are intended to be general enough to not be tied to inference from JSON -- \fsharpdata\ also does inference for CSV and XML -- and not tied to the generation of any particular type of programming language. Rust code for the basic version of the shape inference can be seen in appendix~\ref{app:inference-code}.
 
 \subsection{Values and shapes}
+\label{sec:values-and-shapes}
 
 The inference thus works with two types. The JSON sample, in our case parsed into a ‹serde_json::Value› -- as was shown in Listing~\ref{lst:valueenum} -- and the shape type. An abstract version of ‹serde_json::Value›, with value variables \omega, and our shape type, with shape variables \sigma, can be written as follows:
 
@@ -258,7 +259,7 @@ If a user breaks our preconditions in this way and this leads to a compiler erro
 While letting the user break these preconditions is acceptable, care has to be taken to preserve these preconditions when extending the basic system. To make the source of any errors obvious, no derive errors should be possible that does not directly mention a trait or type explicitly specified by the user. E.g. if the system is extended with sets, enabling this extension should not be possible without explicitly choosing a target type if doing so breaks the preconditions.
 
 \subsection{Strictness of deserialization}
-\label{sec:design-considerations}
+\label{sec:strictness}
 
 While the types we generate should match the samples they are generated from, and any JSON text that matches their structure, there is always the possibility that the actual JSON we encounter at runtime does not perfectly match what we inferred.
 
@@ -378,6 +379,20 @@ Actually applying these options require some modifications to the basic version 
 The pointer options must then be threaded through our inference and code generation functions, and applied as they match.
 
 A pointer option is a 3-tuple of a pointer, an option name, and an option value. For applying the option we transform the pointer into a list of tokens. E.g. the pointer ‹"/field1/field2"› is converted to the list of tokens $[‹"field1"›, ‹"field2"›]$. For each recursive call of e.g. the $\shap$ function, the first token of each pointer is removed and tested on e.g. the field name to see if the hint should be carried on to the inner call. If a list of keys is empty, then the hint applies to the current value.
+
+For a perspective of how handling of such pointer options can quickly become complex we will look briefly at the three examples in section~\ref{sec:json-pointers}: ‹use_type›, ‹same_as› and ‹type_name›.
+
+On the surface, ‹use_type› seems very simple. The user specifies a type, and the code generation outputs the type for a field. Looking closer, there are actually several possibilities which all have to be handled:
+
+\begin{itemize}
+  \item The specified type may be a recognized shape, like ‹number›, ‹map› or ‹tuple›. In this case the information is relevant to the inference, and may lead to some specific behavior therein.
+  \item The specified type can be a concrete type, which also corresponds to a shape (or for that matter, a shape with inner shapes). E.g. ‹VecDeque›, which corresponds to the $\vect{\sigma}$ shape. Now, the shape information must be used in the inference, but the specific type information must be used in code generation.
+  \item Finally, the specified type may be something the inference knows nothing about, an opaque type. In this case it may be best to infer as normal, but then ignore the inferred shape in code generation, but log or insert it into a generated comment for debugging purposes.
+\end{itemize}
+
+For ‹same_as›, handling the simple case may actually be quite straightforward. As an intermediate phase, extract two shapes, find a common shape using $\csh(\sigma_1, \sigma_2)$, annotate the result in some way so that the code generation knows to only create one type, and write the result, or some kind of reference back to the original locations. But what happens if there are two or more ‹same_as› declarations? Now, any potential overlap must be correctly handled. And if wildcards are supported even a single ‹same_as› is no longer so simple.
+
+‹type_name› seems perhaps simplest of all. Just a type name that should be used in code generation. There is, however, some hidden complexity here as well. Consider the possibility of two pointer options assigning the same name. Perhaps it should be considered an error, but it could also be interpreted as a declaration that the two shapes pointed to should be the same, which brings us back to the complexity of ‹same_as›.
 
 % hinted_vts(w, hints) {
 %   for (keys, option, value) in hints:
@@ -558,6 +573,7 @@ When we add tuples to the inference, while some tuples can be inferred automatic
 If automatic inference of tuples is disabled, tuple shapes can still be created, and every tuple shape encountered in code generation can be converted to a list unless locally enabled by pointer configuration.
 
 \subsection{Combining identical subtypes}
+\label{sec:combining-identical}
 
 When we generate types with the basic inference and generation, we can end up with many types with exactly the same fields. In appendix~\ref{app:crossref} we can see a real world example of such identical types\footnote{In the example there are two sets of identical types: $\{‹Indexed›, ‹Start›, ‹Created›, ‹Deposited›\}$ and $\{‹PublishedPrint›, ‹Start2›, ‹End›, ‹Issued›\}$. Additionally, the shape of the second set can be considered to be covered by the shape of the first set. Handling such covered shapes automatically is not discussed in this section.}. As mentioned in section~\ref{sec:derive-list}, one of the problems with this is that nominally different types can't be used interchangeably, but it also makes the types harder to understand, and contributes to code bloat.
 
