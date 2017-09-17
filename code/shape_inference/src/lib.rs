@@ -142,7 +142,7 @@ pub fn shape_to_code(
                 struct_def +=
                     &format!("  {}: {}\n", key, field_type);
             }
-            struct_def += "}}\n";
+            struct_def += &format!("}}\n");
 
             (type_name, Some(struct_def + &inner_defs))
         }
